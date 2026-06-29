@@ -301,7 +301,6 @@ enum bl_type : uint16{
 	BL_NPC   = 0x080,
 	BL_CHAT  = 0x100,
 	BL_ELEM  = 0x200,
-
 	BL_ALL   = 0xFFF,
 };
 

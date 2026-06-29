@@ -6557,13 +6557,15 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 
 	run_script( script, 0, sd->id, fake_nd->id );
 
-	if( sd->st != nullptr ){
+	// If the item script is still waiting for input (next/select), keep it alive.
+	// script_detach_state will restore the previous state when the script finishes.
+	if( sd->st != nullptr && ( sd->st->state == END || sd->st->state == CLOSE ) ){
 		script_free_state( sd->st );
 		sd->st = nullptr;
 	}
 
-	// If an old script is present
-	if( previous_st != nullptr ){
+	// If an old script was present and the item script has already completed, restore it
+	if( sd->st == nullptr && previous_st != nullptr ){
 		// Because of detach the RID will be removed, so we need to restore it
 		previous_st->rid = sd->id;
 

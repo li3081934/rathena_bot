@@ -1,0 +1,118 @@
+Header:
+  Type: ITEM_DB
+  Version: 3
+
+Body:
+  - Id: 61001
+    AegisName: Bot_Control_Crystal
+    Name: Bot Control Crystal
+    Type: Usable
+    Flags:
+      NoConsume: true
+    Script: |
+      .@lv = bot_getinfo("base_level");
+      .@jl = bot_getinfo("job_level");
+      .@hp_v = bot_getinfo("hp");
+      .@mhp_v = bot_getinfo("max_hp");
+      .@sp_v = bot_getinfo("sp");
+      .@msp_v = bot_getinfo("max_sp");
+      .@spt = bot_getinfo("status_point");
+      .@skt = bot_getinfo("skill_point");
+      .@ai = bot_getinfo("ai_state");
+      if (.@ai == 0) { .@mode$ = "Follow"; }
+      else if (.@ai == 1) { .@mode$ = "Support"; }
+      else { .@mode$ = "Standby"; }
+      mes "== Bot: Lv." + .@lv + "/" + .@jl + " ==";
+      mes "HP:" + .@hp_v + "/" + .@mhp_v + "  SP:" + .@sp_v + "/" + .@msp_v;
+      mes "Pts:" + .@spt + " SPt:" + .@skt + " Mode:" + .@mode$;
+      next;
+      switch(select("Summon Bot:Add Stats:Learn Skill:AI Mode:Recall Bot:Revive Bot:Cancel")) {
+      case 1:
+        bot_create(0);
+        mes "Bot summoned!";
+        close;
+      case 2:
+        .@str = bot_getinfo("str");
+        .@agi = bot_getinfo("agi");
+        .@vit = bot_getinfo("vit");
+        .@int = bot_getinfo("int");
+        .@dex = bot_getinfo("dex");
+        .@luk = bot_getinfo("luk");
+        mes "S:" + .@str + " A:" + .@agi + " V:" + .@vit;
+        mes "I:" + .@int + " D:" + .@dex + " L:" + .@luk;
+        mes "Points: " + .@spt;
+        if (.@spt < 1) { close; }
+        next;
+        switch(select("STR:AGI:VIT:INT:DEX:LUK:Back")) {
+        case 1: .@s = SP_STR; break;
+        case 2: .@s = SP_AGI; break;
+        case 3: .@s = SP_VIT; break;
+        case 4: .@s = SP_INT; break;
+        case 5: .@s = SP_DEX; break;
+        case 6: .@s = SP_LUK; break;
+        default: close;
+        }
+        next;
+        switch(select("+1:+5:+10:+All:Back")) {
+        case 1: .@a = 1; break;
+        case 2: .@a = 5; break;
+        case 3: .@a = 10; break;
+        case 4: .@a = .@spt; break;
+        default: close;
+        }
+        bot_statusup(.@s, .@a);
+        mes "Stat increased!";
+        close2;
+      case 3:
+        mes "== Skills ==";
+        mes "Points: " + .@skt;
+        if (.@skt < 1) { close; }
+        .@class = bot_getinfo("class");
+        next;
+        if (.@class == 4) {
+          .@heal = bot_getskilllv(28);
+          .@bless = bot_getskilllv(34);
+          .@incagi = bot_getskilllv(29);
+          .@angelus = bot_getskilllv(33);
+          .@crucis = bot_getskilllv(32);
+          .@teleport = bot_getskilllv(26);
+          .@pneuma = bot_getskilllv(25);
+          .@menu$ = "Heal Lv.^0000FF" + .@heal + "^000000:Blessing Lv.^0000FF" + .@bless + "^000000:IncAgi Lv.^0000FF" + .@incagi + "^000000:Angelius Lv.^0000FF" + .@angelus + "^000000:Crucis Lv.^0000FF" + .@crucis + "^000000:Teleport Lv.^0000FF" + .@teleport + "^000000:Pneuma Lv.^0000FF" + .@pneuma + "^000000:Back";
+          switch(select(.@menu$)) {
+          case 1: bot_skill(28, 1); mes "Heal learned!"; break;
+          case 2: bot_skill(34, 1); mes "Blessing learned!"; break;
+          case 3: bot_skill(29, 1); mes "IncAgi learned!"; break;
+          case 4: bot_skill(33, 1); mes "Angelius learned!"; break;
+          case 5: bot_skill(32, 1); mes "Crucis learned!"; break;
+          case 6: bot_skill(26, 1); mes "Teleport learned!"; break;
+          case 7: bot_skill(25, 1); mes "Pneuma learned!"; break;
+          default: close;
+          }
+        } else {
+          switch(select("NV_BASIC:NV_FIRSTAID:NV_TRICKDEAD:Back")) {
+          case 1: bot_skill(1, 1); mes "NV_BASIC learned!"; break;
+          case 2: bot_skill(879, 1); mes "NV_FIRSTAID learned!"; break;
+          case 3: bot_skill(880, 1); mes "NV_TRICKDEAD learned!"; break;
+          default: close;
+          }
+        }
+        close;
+      case 4:
+        next;
+        switch(select("Follow:Support:Standby:Cancel")) {
+        case 1: bot_ai_mode(0); mes "Follow."; break;
+        case 2: bot_ai_mode(1); mes "Support."; break;
+        case 3: bot_ai_mode(2); mes "Standby."; break;
+        default: close;
+        }
+        close;
+      case 5:
+        bot_recall();
+        close;
+      case 6:
+        bot_revive();
+        close;
+      default:
+        close;
+      }
+      close;

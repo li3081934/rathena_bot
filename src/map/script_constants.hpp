@@ -621,6 +621,12 @@
 	export_constant2("bInt",SP_INT);
 	export_constant2("bDex",SP_DEX);
 	export_constant2("bLuk",SP_LUK);
+	export_constant(SP_STR);
+	export_constant(SP_AGI);
+	export_constant(SP_VIT);
+	export_constant(SP_INT);
+	export_constant(SP_DEX);
+	export_constant(SP_LUK);
 	export_constant2("bPow",SP_POW);
 	export_constant2("bSta",SP_STA);
 	export_constant2("bWis",SP_WIS);

@@ -60,6 +60,7 @@
 #include "pc.hpp"
 #include "pc_groups.hpp"
 #include "pet.hpp"
+#include "bot_ctrl.hpp"
 #include "quest.hpp"
 #include "storage.hpp"
 

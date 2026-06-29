@@ -1,11 +1,15 @@
-// Copyright (c) rAthena Dev Teams - Licensed under GNU GPL
-// For more information, see LICENCE in the main folder
-
-/**
- * Custom Script Commands
- * Place the definition of custom script commands in this file.
- * Format:
- *	BUILDIN_DEF(command_name,"parameters"),
- **/
-
-//BUILDIN_DEF(example,""),
+// Bot System
+BUILDIN_DEF(bot_create, "i"),
+BUILDIN_DEF(bot_destroy, ""),
+BUILDIN_DEF(bot_getinfo, "s"),
+BUILDIN_DEF(bot_statusup, "ii"),
+BUILDIN_DEF(bot_skill, "ii"),
+BUILDIN_DEF(bot_equip, "i"),
+BUILDIN_DEF(bot_unequip, "i"),
+BUILDIN_DEF(bot_getitem, "ii"),
+BUILDIN_DEF(bot_ai_mode, "i"),
+BUILDIN_DEF(bot_say, "s"),
+BUILDIN_DEF(bot_jobchange, "i"),
+BUILDIN_DEF(bot_recall, ""),
+BUILDIN_DEF(bot_getskilllv, "i"),
+BUILDIN_DEF(bot_revive, ""),

@@ -1,0 +1,151 @@
+prontera,155,185,4	script	Bot Manager#botman	4_M_ORIENT01,{
+	mes "[Bot Manager]";
+	mes "Hello! I can give you a Bot";
+	mes "Companion.";
+	mes "Requirement: Base Level 10+";
+	next;
+	if (BaseLevel < 10) {
+		mes "[Bot Manager]";
+		mes "You are too weak!";
+		mes "Come back at level 10.";
+		close;
+	}
+	if (countitem(61001) > 0) {
+		mes "[Bot Manager]";
+		mes "You already have a Bot Crystal!";
+		next;
+		switch(select("Destroy Bot:Job Change:Nothing")) {
+		case 1:
+			if (bot_getinfo("base_level") > 0) {
+				delitem 61001, 1;
+				bot_destroy();
+				mes "[Bot Manager]";
+				mes "Bot destroyed.";
+				mes "Come back anytime!";
+			} else {
+				mes "[Bot Manager]";
+				mes "You don't have a Bot.";
+			}
+			close;
+		case 2:
+			.@class = bot_getinfo("class");
+			.@sp = bot_getinfo("skill_point");
+			if (.@sp > 0) {
+				mes "[Bot Manager]";
+				mes "Use all skill points first!";
+				close;
+			}
+			if (.@class == 0) {
+				next;
+				switch(select("Swordman:Mage:Archer:Acolyte:Merchant:Thief:Cancel")) {
+				case 1: bot_jobchange(1); mes "Swordman!"; break;
+				case 2: bot_jobchange(2); mes "Mage!"; break;
+				case 3: bot_jobchange(3); mes "Archer!"; break;
+				case 4: bot_jobchange(4); mes "Acolyte!"; break;
+				case 5: bot_jobchange(5); mes "Merchant!"; break;
+				case 6: bot_jobchange(6); mes "Thief!"; break;
+				default: close;
+				}
+				close;
+			}
+			if (.@class == 1) {
+				next;
+				switch(select("Knight:Crusader:Cancel")) {
+				case 1: bot_jobchange(7); mes "Knight!"; break;
+				case 2: bot_jobchange(14); mes "Crusader!"; break;
+				default: close;
+				}
+				close;
+			}
+			if (.@class == 2) {
+				next;
+				switch(select("Wizard:Sage:Cancel")) {
+				case 1: bot_jobchange(9); mes "Wizard!"; break;
+				case 2: bot_jobchange(16); mes "Sage!"; break;
+				default: close;
+				}
+				close;
+			}
+			if (.@class == 3) {
+				next;
+				switch(select("Hunter:Bard:Dancer:Cancel")) {
+				case 1: bot_jobchange(11); mes "Hunter!"; break;
+				case 2: bot_jobchange(19); mes "Bard!"; break;
+				case 3: bot_jobchange(20); mes "Dancer!"; break;
+				default: close;
+				}
+				close;
+			}
+			if (.@class == 4) {
+				next;
+				switch(select("Priest:Monk:Cancel")) {
+				case 1: bot_jobchange(8); mes "Priest!"; break;
+				case 2: bot_jobchange(15); mes "Monk!"; break;
+				default: close;
+				}
+				close;
+			}
+			if (.@class == 5) {
+				next;
+				switch(select("Blacksmith:Alchemist:Cancel")) {
+				case 1: bot_jobchange(10); mes "Blacksmith!"; break;
+				case 2: bot_jobchange(18); mes "Alchemist!"; break;
+				default: close;
+				}
+				close;
+			}
+			if (.@class == 6) {
+				next;
+				switch(select("Assassin:Rogue:Cancel")) {
+				case 1: bot_jobchange(12); mes "Assassin!"; break;
+				case 2: bot_jobchange(17); mes "Rogue!"; break;
+				default: close;
+				}
+				close;
+			}
+			mes "[Bot Manager]";
+			mes "Higher job change";
+			mes "not supported yet.";
+			close;
+		default:
+			close;
+		}
+	}
+	switch(select("Give me a Bot!:Not now")) {
+	case 1:
+		next;
+		switch(select("Novice Bot:Acolyte Bot:Cancel")) {
+		case 1:
+			if (bot_create(0)) {
+				getitem 61001, 1;
+				mes "[Bot Manager]";
+				mes "Your Novice Bot is ready!";
+				mes "Use Bot Control Crystal";
+				mes "to manage your Bot.";
+				specialeffect2 EF_LEVELUP;
+			} else {
+				mes "[Bot Manager]";
+				mes "You already have a Bot!";
+				mes "Check Bot Control Crystal.";
+			}
+			close;
+		case 2:
+			if (bot_create(4)) {
+				getitem 61001, 1;
+				mes "[Bot Manager]";
+				mes "Your Acolyte Bot is ready!";
+				mes "Base 1/Job 1 with NV_BASIC Lv9!";
+				specialeffect2 EF_LEVELUP;
+			} else {
+				mes "[Bot Manager]";
+				mes "You already have a Bot!";
+				mes "Check Bot Control Crystal.";
+			}
+			close;
+		default:
+			close;
+		}
+	default:
+		close;
+	}
+}

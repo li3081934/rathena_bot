@@ -453,8 +453,11 @@ bool party_invite( map_session_data& sd, map_session_data *tsd ){
 
 	// You can't invite someone who has already disconnected.
 	if( !session_isActive( tsd->fd ) ){
-		clif_party_invite_reply( sd, tsd->status.name, PARTY_REPLY_REJECTED );
-		return false;
+		// Allow if target is an active bot/fake-player on the same map
+		if( !tsd->state.active || tsd->m != sd.m ){
+			clif_party_invite_reply( sd, tsd->status.name, PARTY_REPLY_REJECTED );
+			return false;
+		}
 	}
 
 	// Already associated with a party

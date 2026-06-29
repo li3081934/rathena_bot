@@ -21,6 +21,7 @@
 
 #include "battle.hpp"
 #include "battleground.hpp"
+
 #include "clif.hpp"
 #include "elemental.hpp"
 #include "guild.hpp"

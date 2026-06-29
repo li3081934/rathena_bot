@@ -34,6 +34,7 @@ enum e_log_pick_type : uint32;
 enum sc_type : int16;
 
 class MapGuild;
+struct bot_ctrl;
 
 #define MAX_PC_BONUS 50 /// Max bonus, usually used by item bonus
 #define MAX_PC_FEELHATE 3 /// Max feel hate info
@@ -750,6 +751,7 @@ public:
 	homun_data *hd;	// [blackhole89]
 	s_mercenary_data *md;
 	s_elemental_data *ed;
+	bot_ctrl *bot;
 
 	struct s_hate_mob {
 		int32  m; //-1 - none, other: map index corresponding to map name.

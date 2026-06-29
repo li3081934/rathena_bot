@@ -49,6 +49,7 @@
 #include "path.hpp"
 #include "pc.hpp"
 #include "pet.hpp"
+#include "bot_ctrl.hpp"
 #include "quest.hpp"
 #include "storage.hpp"
 #include "trade.hpp"
@@ -2258,6 +2259,9 @@ int32 map_quit(map_session_data *sd) {
 
 	if( sd->status.clan_id )
 		clan_member_left( *sd );
+
+	if (sd->bot)
+		bot_ctrl_destroy(sd->bot);
 
 	pc_itemcd_do(sd,false);
 
@@ -5056,6 +5060,7 @@ void MapServer::finalize(){
 	do_final_guild();
 	do_final_party();
 	do_final_pc();
+	do_final_bot_ctrl();
 	do_final_pet();
 	do_final_homunculus();
 	do_final_mercenary();
@@ -5434,6 +5439,7 @@ bool MapServer::initialize( int32 argc, char *argv[] ){
 	do_init_party();
 	do_init_guild();
 	do_init_storage();
+	do_init_bot_ctrl();
 	do_init_pet();
 	do_init_homunculus();
 	do_init_mercenary();
