@@ -1,0 +1,62 @@
+//===== rAthena Script =======================================
+//= Card Exchanger
+//===== By: ==================================================
+//===== Current Version: =====================================
+//= 1.0
+//===== Description: =========================================
+//= Exchange monster cards for Cash Points.
+//= 1 card = 10 Cash Points.
+//============================================================
+
+prontera,155,190,4	script	Card Exchanger#cash	100,{
+	mes "[Card Exchanger]";
+	mes "Hello! Give me your monster";
+	mes "cards and I'll give you";
+	mes "10 Cash Points per card!";
+	next;
+
+	switch(select("Exchange my cards","Check Cash Points","Cancel")) {
+	case 1:
+		.@total = 0;
+		for (.@i = 4000; .@i <= 4399; .@i++) {
+			.@count = countitem(.@i);
+			if (.@count > 0)
+				.@total += .@count;
+		}
+
+		if (.@total == 0) {
+			mes "[Card Exchanger]";
+			mes "You don't have any";
+			mes "cards to exchange.";
+			close;
+		}
+
+		mes "[Card Exchanger]";
+		mes "You have ^0055FF" + .@total + "^000000 cards.";
+		mes "Exchange all for";
+		mes "^0055FF" + (.@total * 10) + "^000000 Cash Points?";
+		next;
+
+		if (select("Yes, exchange!","No, keep them") == 1) {
+			for (.@i = 4000; .@i <= 4399; .@i++) {
+				.@count = countitem(.@i);
+				if (.@count > 0)
+					delitem .@i, .@count;
+			}
+			set #CASHPOINTS, #CASHPOINTS + (.@total * 10);
+			mes "[Card Exchanger]";
+			mes "Done! You received";
+			mes "^0055FF" + (.@total * 10) + "^000000 Cash Points!";
+			close;
+		}
+		close;
+
+	case 2:
+		mes "[Card Exchanger]";
+		mes "You have ^0055FF" + #CASHPOINTS + "^000000 Cash Points.";
+		close;
+
+	case 3:
+		close;
+	}
+}

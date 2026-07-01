@@ -26,7 +26,7 @@ Body:
       mes "HP:" + .@hp_v + "/" + .@mhp_v + "  SP:" + .@sp_v + "/" + .@msp_v;
       mes "Pts:" + .@spt + " SPt:" + .@skt + " Mode:" + .@mode$;
       next;
-      switch(select("Summon Bot:Add Stats:Learn Skill:AI Mode:Recall Bot:Revive Bot:Cancel")) {
+      switch(select("Summon Bot:Add Stats:Learn Skill:AI Mode:Recall Bot:Revive Bot:Give Items:Take Items:Backpack:Cancel")) {
       case 1:
         bot_create(0);
         mes "Bot summoned!";
@@ -111,6 +111,145 @@ Body:
         close;
       case 6:
         bot_revive();
+        close;
+      case 7:
+        if (bot_getinfo("base_level") < 1) {
+          mes "No bot found!";
+          close;
+        }
+        getinventorylist;
+        if (@inventorylist_count == 0) {
+          mes "Your inventory is empty!";
+          close;
+        }
+        .@menu$ = "";
+        for (.@i = 0; .@i < @inventorylist_count; .@i++) {
+          .@name$ = getitemname(@inventorylist_id[.@i]);
+          if (@inventorylist_refine[.@i] > 0)
+            .@name$ = "+" + @inventorylist_refine[.@i] + " " + .@name$;
+          if (@inventorylist_equip[.@i])
+            .@name$ = "[E] " + .@name$;
+          .@menu$ = .@menu$ + .@name$ + " x" + @inventorylist_amount[.@i] + ":";
+        }
+        .@menu$ = .@menu$ + "Cancel";
+        .@sel = select(.@menu$);
+        if (.@sel > @inventorylist_count) close;
+        .@slot = .@sel - 1;
+        .@id = @inventorylist_id[.@slot];
+        .@max = @inventorylist_amount[.@slot];
+        .@name$ = getitemname(.@id);
+        next;
+        mes "Give how many? (max: " + .@max + ")";
+        input .@amt;
+        if (.@amt < 1 || .@amt > .@max) { close; }
+        bot_giveitem(.@id, .@amt);
+        mes "Given " + .@amt + "x " + .@name$ + " to Bot!";
+        close;
+      case 8:
+        if (bot_getinfo("base_level") < 1) {
+          mes "No bot found!";
+          close;
+        }
+        bot_inventorylist;
+        if (@botinv_count == 0) {
+          mes "Bot's inventory is empty!";
+          close;
+        }
+        .@menu$ = "";
+        for (.@i = 0; .@i < @botinv_count; .@i++) {
+          .@name$ = getitemname(@botinv_id[.@i]);
+          if (@botinv_refine[.@i] > 0)
+            .@name$ = "+" + @botinv_refine[.@i] + " " + .@name$;
+          if (@botinv_equip[.@i])
+            .@name$ = "[E] " + .@name$;
+          .@menu$ = .@menu$ + .@name$ + " x" + @botinv_amount[.@i] + ":";
+        }
+        .@menu$ = .@menu$ + "Cancel";
+        .@sel = select(.@menu$);
+        if (.@sel > @botinv_count) close;
+        .@slot = .@sel - 1;
+        .@id = @botinv_id[.@slot];
+        .@max = @botinv_amount[.@slot];
+        .@name$ = getitemname(.@id);
+        next;
+        mes "Take how many? (max: " + .@max + ")";
+        input .@amt;
+        if (.@amt < 1 || .@amt > .@max) { close; }
+        bot_takeitem(.@id, .@amt);
+        mes "Took " + .@amt + "x " + .@name$ + " from Bot!";
+        close;
+      case 9:
+        if (bot_getinfo("base_level") < 1) {
+          mes "No bot found!";
+          close;
+        }
+        bot_inventorylist;
+        if (@botinv_count == 0) {
+          mes "Bot's backpack is empty!";
+          close;
+        }
+        .@menu$ = "";
+        for (.@i = 0; .@i < @botinv_count; .@i++) {
+          .@name$ = getitemname(@botinv_id[.@i]);
+          if (@botinv_refine[.@i] > 0)
+            .@name$ = "+" + @botinv_refine[.@i] + " " + .@name$;
+          if (@botinv_equip[.@i])
+            .@name$ = .@name$ + " [EQ]";
+          .@menu$ = .@menu$ + .@name$ + " x" + @botinv_amount[.@i] + ":";
+        }
+        .@menu$ = .@menu$ + "Cancel";
+        .@sel = select(.@menu$);
+        if (.@sel > @botinv_count) close;
+        .@slot = .@sel - 1;
+        .@idx = @botinv_idx[.@slot];
+        .@id = @botinv_id[.@slot];
+        .@type = @botinv_type[.@slot];
+        .@eq = @botinv_equip[.@slot];
+        .@amt = @botinv_amount[.@slot];
+        .@name$ = getitemname(.@id);
+        .@is_usable = (.@type == IT_HEALING || .@type == IT_USABLE || .@type == IT_CASH);
+        .@is_equip = (.@type == IT_WEAPON || .@type == IT_ARMOR || .@type == IT_AMMO || .@type == IT_SHADOWGEAR);
+        next;
+        .@actions$ = "";
+        if (.@is_usable) .@actions$ = .@actions$ + "Use:";
+        if (.@is_equip) {
+          if (.@eq) .@actions$ = .@actions$ + "Unequip:";
+          else .@actions$ = .@actions$ + "Equip:";
+        }
+        .@actions$ = .@actions$ + "Give to Master (" + .@amt + "):Back";
+        .@sel2 = select(.@actions$);
+        .@c = 0;
+        if (.@is_usable) {
+          .@c++;
+          if (.@sel2 == .@c) {
+            bot_useitem(.@idx);
+            mes "Used " + .@name$ + "!";
+            close;
+          }
+        }
+        if (.@is_equip) {
+          .@c++;
+          if (.@sel2 == .@c) {
+            if (.@eq) {
+              bot_unequip(.@idx);
+              mes "Unequipped " + .@name$ + "!";
+            } else {
+              bot_equip(.@idx);
+              mes "Equipped " + .@name$ + "!";
+            }
+            close;
+          }
+        }
+        .@c++;
+        if (.@sel2 == .@c) {
+          next;
+          mes "Give how many " + .@name$ + "? (max: " + .@amt + ")";
+          input .@qty;
+          if (.@qty < 1 || .@qty > .@amt) close;
+          bot_takeitem(.@id, .@qty);
+          mes "Gave " + .@qty + "x " + .@name$ + " to you!";
+          close;
+        }
         close;
       default:
         close;

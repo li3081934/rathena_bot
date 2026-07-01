@@ -197,7 +197,19 @@ BUILDIN_FUNC(bot_equip)
 
     map_session_data* bot = sd->bot->bot_sd;
     int16 idx = (int16)script_getnum(st, 2);
-    pc_equipitem(bot, idx, 0);
+
+    if (idx < 0 || idx >= MAX_INVENTORY || bot->inventory.u.items_inventory[idx].nameid == 0)
+        return SCRIPT_CMD_SUCCESS;
+
+    if (bot->inventory.u.items_inventory[idx].equip) {
+        clif_displaymessage(sd->fd, "Item is already equipped!");
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    if (!pc_equipitem(bot, idx, pc_equippoint(bot, idx))) {
+        clif_displaymessage(sd->fd, "Bot cannot equip this item (level/job requirement?)");
+        return SCRIPT_CMD_SUCCESS;
+    }
     return SCRIPT_CMD_SUCCESS;
 }
 
@@ -208,8 +220,33 @@ BUILDIN_FUNC(bot_unequip)
         return SCRIPT_CMD_SUCCESS;
 
     map_session_data* bot = sd->bot->bot_sd;
-    int32 pos = script_getnum(st, 2);
-    pc_unequipitem(bot, pos, 0);
+    int16 idx = (int16)script_getnum(st, 2);
+
+    if (idx < 0 || idx >= MAX_INVENTORY || bot->inventory.u.items_inventory[idx].nameid == 0)
+        return SCRIPT_CMD_SUCCESS;
+    if (!bot->inventory.u.items_inventory[idx].equip) {
+        clif_displaymessage(sd->fd, "Item is not equipped!");
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    pc_unequipitem(bot, idx, 0);
+    return SCRIPT_CMD_SUCCESS;
+}
+
+BUILDIN_FUNC(bot_useitem)
+{
+    map_session_data* sd;
+    if (!script_rid2sd(sd) || !sd->bot || !sd->bot->bot_sd)
+        return SCRIPT_CMD_SUCCESS;
+
+    map_session_data* bot = sd->bot->bot_sd;
+    int16 idx = (int16)script_getnum(st, 2);
+    if (idx < 0 || idx >= MAX_INVENTORY)
+        return SCRIPT_CMD_SUCCESS;
+    if (bot->inventory.u.items_inventory[idx].nameid == 0)
+        return SCRIPT_CMD_SUCCESS;
+
+    pc_useitem(bot, idx);
     return SCRIPT_CMD_SUCCESS;
 }
 
@@ -353,5 +390,142 @@ BUILDIN_FUNC(bot_revive)
     } else {
         clif_displaymessage(sd->fd, "Bot is already alive!");
     }
+    return SCRIPT_CMD_SUCCESS;
+}
+
+BUILDIN_FUNC(bot_giveitem)
+{
+    map_session_data* sd;
+    if (!script_rid2sd(sd) || !sd->bot || !sd->bot->bot_sd) {
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+    map_session_data* bot = sd->bot->bot_sd;
+
+    t_itemid nameid = (t_itemid)script_getnum(st, 2);
+    int32 amount = script_getnum(st, 3);
+    if (amount <= 0) {
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    int16 idx = pc_search_inventory(sd, nameid);
+    if (idx < 0 || sd->inventory.u.items_inventory[idx].amount < amount) {
+        clif_displaymessage(sd->fd, "Not enough items!");
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    struct item tmp;
+    memcpy(&tmp, &sd->inventory.u.items_inventory[idx], sizeof(tmp));
+    tmp.amount = amount;
+
+    uint8 add_result = pc_additem(bot, &tmp, amount, LOG_TYPE_SCRIPT);
+    if (add_result != ADDITEM_SUCCESS) {
+        const char* msg;
+        switch (add_result) {
+            case ADDITEM_OVERWEIGHT: msg = "Bot can't carry that much weight!"; break;
+            case ADDITEM_OVERITEM:   msg = "Bot's inventory is full!"; break;
+            case ADDITEM_OVERAMOUNT: msg = "Bot has too many of this item!"; break;
+            default:                 msg = "Bot cannot receive the item!";
+        }
+        clif_displaymessage(sd->fd, msg);
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    pc_delitem(sd, idx, amount, 0, 0, LOG_TYPE_SCRIPT);
+    script_pushint(st, 1);
+    return SCRIPT_CMD_SUCCESS;
+}
+
+BUILDIN_FUNC(bot_takeitem)
+{
+    map_session_data* sd;
+    if (!script_rid2sd(sd) || !sd->bot || !sd->bot->bot_sd) {
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+    map_session_data* bot = sd->bot->bot_sd;
+
+    t_itemid nameid = (t_itemid)script_getnum(st, 2);
+    int32 amount = script_getnum(st, 3);
+    if (amount <= 0) {
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    int16 idx = pc_search_inventory(bot, nameid);
+    if (idx < 0 || bot->inventory.u.items_inventory[idx].amount < amount) {
+        clif_displaymessage(sd->fd, "Bot doesn't have enough items!");
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    struct item tmp;
+    memcpy(&tmp, &bot->inventory.u.items_inventory[idx], sizeof(tmp));
+    tmp.amount = amount;
+
+    uint8 add_result = pc_additem(sd, &tmp, amount, LOG_TYPE_SCRIPT);
+    if (add_result != ADDITEM_SUCCESS) {
+        const char* msg;
+        switch (add_result) {
+            case ADDITEM_OVERWEIGHT: msg = "You can't carry that much weight!"; break;
+            case ADDITEM_OVERITEM:   msg = "Your inventory is full!"; break;
+            case ADDITEM_OVERAMOUNT: msg = "You have too many of this item!"; break;
+            default:                 msg = "Cannot receive the item!";
+        }
+        clif_displaymessage(sd->fd, msg);
+        script_pushint(st, 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+
+    pc_delitem(bot, idx, amount, 0, 0, LOG_TYPE_SCRIPT);
+    script_pushint(st, 1);
+    return SCRIPT_CMD_SUCCESS;
+}
+
+BUILDIN_FUNC(bot_inventorylist)
+{
+    map_session_data* sd;
+    if (!script_rid2sd(sd) || !sd->bot || !sd->bot->bot_sd) {
+        pc_setreg(sd, add_str("@botinv_count"), 0);
+        return SCRIPT_CMD_SUCCESS;
+    }
+    map_session_data* bot = sd->bot->bot_sd;
+
+    int32 j = 0;
+    for (int32 i = 0; i < MAX_INVENTORY; i++) {
+        if (bot->inventory.u.items_inventory[i].nameid == 0)
+            continue;
+
+        pc_setreg(sd, reference_uid(add_str("@botinv_id"), j),
+                  bot->inventory.u.items_inventory[i].nameid);
+        pc_setreg(sd, reference_uid(add_str("@botinv_idx"), j), i);
+        pc_setreg(sd, reference_uid(add_str("@botinv_amount"), j),
+                  bot->inventory.u.items_inventory[i].amount);
+        pc_setreg(sd, reference_uid(add_str("@botinv_refine"), j),
+                  bot->inventory.u.items_inventory[i].refine);
+        pc_setreg(sd, reference_uid(add_str("@botinv_identify"), j),
+                  bot->inventory.u.items_inventory[i].identify);
+        pc_setreg(sd, reference_uid(add_str("@botinv_equip"), j),
+                  bot->inventory.u.items_inventory[i].equip);
+
+        std::shared_ptr<item_data> id = item_db.find(bot->inventory.u.items_inventory[i].nameid);
+        if (id) {
+            pc_setreg(sd, reference_uid(add_str("@botinv_type"), j), id->type);
+        } else {
+            pc_setreg(sd, reference_uid(add_str("@botinv_type"), j), 0);
+        }
+
+        for (int k = 0; k < MAX_SLOTS; k++) {
+            char var[32];
+            snprintf(var, sizeof(var), "@botinv_card%d", k + 1);
+            pc_setreg(sd, reference_uid(add_str(var), j),
+                      bot->inventory.u.items_inventory[i].card[k]);
+        }
+        j++;
+    }
+    pc_setreg(sd, add_str("@botinv_count"), j);
     return SCRIPT_CMD_SUCCESS;
 }

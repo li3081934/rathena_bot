@@ -32,6 +32,93 @@ Header:
   Type: ITEM_CASH_DB
   Version: 1
 
+Body:
+  - Tab: Scrolls
+    Items:
+      - Item: Blessing_10_Scroll_Box
+        Price: 125
+      - Item: Inc_Agi_10_Scroll_Box
+        Price: 125
+      - Item: Aspersio_5_Scroll_Box
+        Price: 100
+      - Item: Assumptio_5_Scroll_Box
+        Price: 150
+      - Item: Wind_Walk_10_Scroll_Box
+        Price: 150
+      - Item: Adrenaline_Scroll_Box
+        Price: 100
+      - Item: Dun_Tele_Scroll1_Box
+        Price: 50
+
+  - Tab: Consumables
+    Items:
+      - Item: Battle_Manual_Box
+        Price: 1000
+      - Item: Bubble_Gum_Box
+        Price: 1000
+      - Item: Insurance_Package
+        Price: 200
+      - Item: Str_Dish_Box
+        Price: 100
+      - Item: Agi_Dish_Box
+        Price: 100
+      - Item: Int_Dish_Box
+        Price: 100
+      - Item: Dex_Dish_Box
+        Price: 100
+      - Item: Luk_Dish_Box
+        Price: 100
+      - Item: Vit_Dish_Box
+        Price: 100
+      - Item: Str_Dish20_Box
+        Price: 300
+      - Item: Agi_Dish20_Box
+        Price: 300
+      - Item: Vit_Dish20_Box
+        Price: 300
+      - Item: Int_Dish20_Box
+        Price: 300
+      - Item: Dex_Dish20_Box
+        Price: 300
+      - Item: Luk_Dish20_Box
+        Price: 300
+
+  - Tab: Permanent
+    Items:
+      - Item: Kafra_Card_Box
+        Price: 100
+      - Item: Giant_Fly_Wing_Box
+        Price: 100
+      - Item: Neuralizer_Box
+        Price: 1500
+      - Item: Token_Of_Siegfried_Box
+        Price: 150
+      - Item: Megaphone_Box
+        Price: 50
+      - Item: Convex_Mirror_Box
+        Price: 100
+      - Item: Battle_Manual25_Box
+        Price: 300
+      - Item: Battle_Manual100_Box
+        Price: 800
+
+  - Tab: Other
+    Items:
+      - Item: Enriched_Elunium
+        Price: 100
+      - Item: Enriched_Oridecon
+        Price: 100
+      - Item: Max_Weight_Up_Scroll
+        Price: 50
+      - Item: HD_Oridecon
+        Price: 200
+      - Item: HD_Elunium
+        Price: 200
+      - Item: New_Style_Coupon
+        Price: 200
+      - Item: Clothing_Dye_Coupon
+        Price: 200
+
 Footer:
   Imports:
     - Path: db/import/item_cash.yml

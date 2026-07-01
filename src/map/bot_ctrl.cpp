@@ -11,6 +11,7 @@
 #include "map.hpp"
 #include "party.hpp"
 #include "pc.hpp"
+#include "itemdb.hpp"
 #include "skill.hpp"
 #include "status.hpp"
 #include "unit.hpp"
@@ -43,7 +44,7 @@ static bool load_char_status(int32 char_id, struct mmo_charstatus* st) {
         "`weapon`,`shield`,`head_top`,`head_mid`,`head_bottom`,`robe`,"
         "`last_map`,`last_x`,`last_y`,`save_map`,`save_x`,`save_y`,"
         "`party_id`,`guild_id`,`pet_id`,`homun_id`,`elemental_id`,"
-        "`sex` FROM `char` WHERE `char_id` = %d", char_id))
+        "`inventory_slots`,`sex` FROM `char` WHERE `char_id` = %d", char_id))
         return false;
     if (Sql_NumRows(mmysql_handle) == 0 || SQL_ERROR == Sql_NextRow(mmysql_handle)) {
         Sql_FreeResult(mmysql_handle);
@@ -96,10 +97,113 @@ static bool load_char_status(int32 char_id, struct mmo_charstatus* st) {
     Sql_GetData(mmysql_handle, 39, &data, nullptr); st->pet_id = atoi(data);
     Sql_GetData(mmysql_handle, 40, &data, nullptr); st->hom_id = atoi(data);
     Sql_GetData(mmysql_handle, 41, &data, nullptr); st->ele_id = atoi(data);
+    // inventory_slots
+    Sql_GetData(mmysql_handle, 42, &data, nullptr); st->inventory_slots = (uint16)atoi(data);
     // sex
-    Sql_GetData(mmysql_handle, 42, &data, nullptr); st->sex = (data[0] == 'F') ? SEX_FEMALE : SEX_MALE;
+    Sql_GetData(mmysql_handle, 43, &data, nullptr); st->sex = (data[0] == 'F') ? SEX_FEMALE : SEX_MALE;
 
     Sql_FreeResult(mmysql_handle);
+    return true;
+}
+
+/***********************************************************************
+ *  从 DB 加载背包
+ ***********************************************************************/
+static bool load_bot_inventory(map_session_data* sd, int32 char_id) {
+    memset(&sd->inventory, 0, sizeof(sd->inventory));
+    sd->inventory.amount = 0;
+    sd->inventory.id = char_id;
+    sd->inventory.type = TABLE_INVENTORY;
+
+    if (SQL_ERROR == Sql_Query(mmysql_handle,
+        "SELECT `id`,`nameid`,`amount`,`equip`,`identify`,`refine`,`attribute`,"
+        "`card0`,`card1`,`card2`,`card3`,"
+        "`option_id0`,`option_val0`,`option_parm0`,"
+        "`option_id1`,`option_val1`,`option_parm1`,"
+        "`option_id2`,`option_val2`,`option_parm2`,"
+        "`option_id3`,`option_val3`,`option_parm3`,"
+        "`option_id4`,`option_val4`,`option_parm4`,"
+        "`expire_time`,`favorite`,`bound`,`unique_id`,`equip_switch`,`enchantgrade` "
+        "FROM `inventory` WHERE `char_id` = %d ORDER BY `id`", char_id))
+        return false;
+
+    int32 idx = 0;
+    char* data;
+
+    while (SQL_SUCCESS == Sql_NextRow(mmysql_handle) && idx < MAX_INVENTORY) {
+        struct item* it = &sd->inventory.u.items_inventory[idx];
+        int col = 0;
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->id = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->nameid = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->amount = (int16)atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->equip = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->identify = (char)atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->refine = (char)atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->attribute = (char)atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->card[0] = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->card[1] = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->card[2] = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->card[3] = atoi(data);
+        for (int o = 0; o < MAX_ITEM_RDM_OPT; o++) {
+            Sql_GetData(mmysql_handle, col++, &data, nullptr); it->option[o].id = (int16)atoi(data);
+            Sql_GetData(mmysql_handle, col++, &data, nullptr); it->option[o].value = (int16)atoi(data);
+            Sql_GetData(mmysql_handle, col++, &data, nullptr); it->option[o].param = (char)atoi(data);
+        }
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->expire_time = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->favorite = (char)atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->bound = (char)atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->unique_id = strtoull(data, nullptr, 10);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->equipSwitch = atoi(data);
+        Sql_GetData(mmysql_handle, col++, &data, nullptr); it->enchantgrade = (uint8)atoi(data);
+
+        sd->inventory_data[idx] = item_db.find(it->nameid).get();
+        idx++;
+    }
+    Sql_FreeResult(mmysql_handle);
+    sd->inventory.amount = idx;
+    return true;
+}
+
+/***********************************************************************
+ *  保存背包到 DB
+ ***********************************************************************/
+static bool save_bot_inventory(map_session_data* sd) {
+    Sql_Query(mmysql_handle, "DELETE FROM `inventory` WHERE `char_id` = %d",
+              sd->status.char_id);
+
+    for (int32 i = 0; i < MAX_INVENTORY; i++) {
+        struct item* it = &sd->inventory.u.items_inventory[i];
+        if (it->nameid == 0) continue;
+
+        if (SQL_ERROR == Sql_Query(mmysql_handle,
+            "INSERT INTO `inventory` "
+            "(`char_id`,`nameid`,`amount`,`equip`,`identify`,`refine`,`attribute`,"
+            "`card0`,`card1`,`card2`,`card3`,"
+            "`option_id0`,`option_val0`,`option_parm0`,"
+            "`option_id1`,`option_val1`,`option_parm1`,"
+            "`option_id2`,`option_val2`,`option_parm2`,"
+            "`option_id3`,`option_val3`,`option_parm3`,"
+            "`option_id4`,`option_val4`,`option_parm4`,"
+            "`expire_time`,`favorite`,`bound`,`unique_id`,`equip_switch`,`enchantgrade`) "
+            "VALUES (%d,%u,%d,%u,%d,%d,%d,"
+            "%u,%u,%u,%u,"
+            "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,"
+            "%u,%d,%d,%llu,%u,%d)",
+            sd->status.char_id, it->nameid, it->amount, it->equip,
+            it->identify, it->refine, it->attribute,
+            it->card[0], it->card[1], it->card[2], it->card[3],
+            it->option[0].id, it->option[0].value, it->option[0].param,
+            it->option[1].id, it->option[1].value, it->option[1].param,
+            it->option[2].id, it->option[2].value, it->option[2].param,
+            it->option[3].id, it->option[3].value, it->option[3].param,
+            it->option[4].id, it->option[4].value, it->option[4].param,
+            it->expire_time, it->favorite, it->bound,
+            (uint64)it->unique_id, it->equipSwitch, it->enchantgrade))
+        {
+            ShowError("bot_ctrl: failed to save inventory item %d for char %d: %s\n",
+                      it->nameid, sd->status.char_id, Sql_GetError(mmysql_handle));
+        }
+    }
     return true;
 }
 
@@ -128,10 +232,16 @@ static int32 bot_ctrl_ai_sub(bot_ctrl* ctrl, t_tick tick) {
         //     }
         // }
         if (ctrl->config.auto_buff) {
-            if (!sd->sc.getSCE(SC_INCREASEAGI) && pc_checkskill(bot, AL_INCAGI) > 0
-                && unit_skilluse_id(bot, sd->id, AL_INCAGI, pc_checkskill(bot, AL_INCAGI)) == 0) return 0;
-            if (!sd->sc.getSCE(SC_BLESSING) && pc_checkskill(bot, AL_BLESSING) > 0
-                && unit_skilluse_id(bot, sd->id, AL_BLESSING, pc_checkskill(bot, AL_BLESSING)) == 0) return 0;
+            if (!sd->sc.getSCE(SC_INCREASEAGI)) {
+                uint16 lv = pc_checkskill(bot, AL_INCAGI);
+                if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_INCAGI, lv)
+                    && unit_skilluse_id(bot, sd->id, AL_INCAGI, lv) == 0) return 0;
+            }
+            if (!sd->sc.getSCE(SC_BLESSING)) {
+                uint16 lv = pc_checkskill(bot, AL_BLESSING);
+                if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_BLESSING, lv)
+                    && unit_skilluse_id(bot, sd->id, AL_BLESSING, lv) == 0) return 0;
+            }
         }
     }
 
@@ -224,6 +334,11 @@ static bot_ctrl* bot_ctrl_bring_online(map_session_data* master, int32 bot_aid, 
         Sql_FreeResult(mmysql_handle);
     }
 
+    // 7. 从 DB 加载背包
+    load_bot_inventory(bot_sd, bot_cid);
+    // 根据已加载的背包重建装备索引（equip_index[]）
+    pc_setequipindex(bot_sd);
+
     status_set_viewdata(bot_sd, bot_sd->status.class_);
     map_addblock(bot_sd);
     clif_spawn(bot_sd);
@@ -244,6 +359,11 @@ static bot_ctrl* bot_ctrl_bring_online(map_session_data* master, int32 bot_aid, 
 
     master->bot = ctrl;
     bot_ctrl_db[master->status.char_id] = ctrl;
+
+    // 修正背包容量和负重，避免旧 Bot DB 数据为 0 导致无法给物品
+    if (bot_sd->status.inventory_slots < 10)
+        bot_sd->status.inventory_slots = 100;
+    bot_sd->max_weight = 200000;
 
     // 6. 自动入队
     if (master->status.party_id) {
@@ -374,7 +494,8 @@ bot_ctrl* bot_ctrl_create(map_session_data* master, int32 class_) {
 void bot_ctrl_destroy(bot_ctrl* ctrl) {
     if (!ctrl) return;
     if (ctrl->bot_sd && ctrl->bot_sd->state.active) {
-        chrif_save(ctrl->bot_sd, CSAVE_QUIT | CSAVE_INVENTORY | CSAVE_CART);
+        save_bot_inventory(ctrl->bot_sd);
+        chrif_save(ctrl->bot_sd, CSAVE_QUIT);
         map_quit(ctrl->bot_sd);
     }
     if (ctrl->master_sd)
