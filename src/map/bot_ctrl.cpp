@@ -5,6 +5,7 @@
 #include <common/showmsg.hpp>
 #include <common/sql.hpp>
 
+#include "battle.hpp"
 #include "chrif.hpp"
 #include "clif.hpp"
 #include <common/mapindex.hpp>
@@ -208,8 +209,260 @@ static bool save_bot_inventory(map_session_data* sd) {
 }
 
 /***********************************************************************
- *  AI
+ *  AI - Common Behaviours (fallback for all jobs)
  ***********************************************************************/
+
+static void common_follow(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!sd || !bot) return;
+    if (check_distance_bl(sd, bot, 3)) return;
+    if (DIFF_TICK(gettick(), bot->ud.canmove_tick) < 0) return;
+    unit_walktobl(bot, sd, 2, 0);
+}
+
+static void common_standby(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    if (!bot) return;
+    // Self-heal if HP < 30%
+    if (ctrl->config.auto_heal && bot->status.hp > 0) {
+        uint8 hp_per = (uint8)((uint64)bot->battle_status.hp * 100 / bot->battle_status.max_hp);
+        if (hp_per < 30) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, bot->id, AL_HEAL, lv);
+                return;
+            }
+        }
+    }
+}
+
+static void common_support(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!bot || !sd) return;
+    t_tick tick = gettick();
+
+    // Heal master if HP low
+    if (ctrl->config.auto_heal && sd->status.hp > 0
+        && DIFF_TICK(tick, ctrl->last_action_tick) > 1000) {
+        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
+        if (hp_per < ctrl->config.hp_threshold) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
+                ctrl->last_action_tick = tick;
+                return;
+            }
+        }
+    }
+
+    common_follow(ctrl);
+}
+
+static void common_guard(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!bot || !sd) return;
+    t_tick tick = gettick();
+
+    // Heal master if needed
+    if (ctrl->config.auto_heal && sd->status.hp > 0
+        && DIFF_TICK(tick, ctrl->last_action_tick) > 1000) {
+        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
+        if (hp_per < ctrl->config.hp_threshold) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
+                ctrl->last_action_tick = tick;
+                return;
+            }
+        }
+    }
+
+    common_follow(ctrl);
+}
+
+struct bot_mob_search {
+    block_list* best;
+    int32 dist;
+    block_list* origin;
+};
+
+static int32 bot_find_mob_sub(block_list* bl, va_list ap) {
+    bot_mob_search* search = va_arg(ap, bot_mob_search*);
+    if (bl == search->origin) return 0;
+    if (bl->type != BL_MOB) return 0;
+    if (!status_check_skilluse(search->origin, bl, 0, 0)) return 0;
+    if (battle_check_target(search->origin, bl, BCT_ENEMY) <= 0) return 0;
+    int32 d = distance_bl(search->origin, bl);
+    if (!search->best || d < search->dist) {
+        search->best = bl;
+        search->dist = d;
+    }
+    return 0;
+}
+
+static block_list* bot_find_nearest_mob(block_list* origin, int16 range) {
+    bot_mob_search search = { nullptr, 9999, origin };
+    map_foreachinrange(bot_find_mob_sub, origin, range, BL_MOB, &search);
+    return search.best;
+}
+
+static void common_assault(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!bot || !sd) return;
+
+    block_list* mob = bot_find_nearest_mob(bot, 8);
+    if (mob) {
+        unit_attack(bot, mob->id, 1);
+        ctrl->target_mob_id = mob->id;
+        return;
+    }
+
+    common_follow(ctrl);
+}
+
+/***********************************************************************
+ *  AI - Acolyte-specific behaviours
+ ***********************************************************************/
+
+static void acolyte_support(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!bot || !sd) return;
+    t_tick tick = gettick();
+
+    if (DIFF_TICK(tick, ctrl->last_action_tick) < 500)
+        goto _follow;
+
+    // 1. Self-heal if HP < 30%
+    if (bot->status.hp > 0) {
+        uint8 my_hp = (uint8)((uint64)bot->battle_status.hp * 100 / bot->battle_status.max_hp);
+        if (my_hp < 30) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, bot->id, AL_HEAL, lv);
+                ctrl->last_action_tick = tick;
+                return;
+            }
+        }
+    }
+
+    // 2. Heal master
+    if (ctrl->config.auto_heal && sd->status.hp > 0 && sd->battle_status.max_hp > 0) {
+        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
+        if (hp_per < ctrl->config.hp_threshold) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
+                ctrl->last_action_tick = tick;
+                return;
+            }
+        }
+    }
+
+    // 3. Buffs
+    if (ctrl->config.auto_buff) {
+        uint8 lv;
+        lv = pc_checkskill(bot, AL_BLESSING);
+        if (lv > 0 && !sd->sc.getSCE(SC_BLESSING)
+            && bot->battle_status.sp >= skill_get_sp(AL_BLESSING, lv)) {
+            unit_skilluse_id(bot, sd->id, AL_BLESSING, lv);
+            ctrl->last_action_tick = tick;
+            return;
+        }
+        lv = pc_checkskill(bot, AL_INCAGI);
+        if (lv > 0 && !sd->sc.getSCE(SC_INCREASEAGI)
+            && bot->battle_status.sp >= skill_get_sp(AL_INCAGI, lv)) {
+            unit_skilluse_id(bot, sd->id, AL_INCAGI, lv);
+            ctrl->last_action_tick = tick;
+            return;
+        }
+        lv = pc_checkskill(bot, PR_KYRIE);
+        if (lv > 0 && !sd->sc.getSCE(SC_KYRIE)
+            && bot->battle_status.sp >= skill_get_sp(PR_KYRIE, lv)) {
+            unit_skilluse_id(bot, sd->id, PR_KYRIE, lv);
+            ctrl->last_action_tick = tick;
+            return;
+        }
+        lv = pc_checkskill(bot, HP_ASSUMPTIO);
+        if (lv > 0 && !sd->sc.getSCE(SC_ASSUMPTIO)
+            && bot->battle_status.sp >= skill_get_sp(HP_ASSUMPTIO, lv)) {
+            unit_skilluse_id(bot, sd->id, HP_ASSUMPTIO, lv);
+            ctrl->last_action_tick = tick;
+            return;
+        }
+    }
+
+_follow:
+    common_follow(ctrl);
+}
+
+static void acolyte_guard(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!bot || !sd) return;
+    t_tick tick = gettick();
+
+    // 1. Self-heal if HP < 30%
+    if (bot->status.hp > 0) {
+        uint8 my_hp = (uint8)((uint64)bot->battle_status.hp * 100 / bot->battle_status.max_hp);
+        if (my_hp < 30) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, bot->id, AL_HEAL, lv);
+                ctrl->last_action_tick = tick;
+                return;
+            }
+        }
+    }
+
+    // 2. Revive master
+    if (sd->status.hp <= 0 && sd->status.char_id > 0) {
+        uint8 lv = pc_checkskill(bot, ALL_RESURRECTION);
+        if (lv > 0 && bot->battle_status.sp >= skill_get_sp(ALL_RESURRECTION, lv)) {
+            unit_skilluse_id(bot, sd->id, ALL_RESURRECTION, lv);
+            ctrl->last_action_tick = tick;
+            return;
+        }
+    }
+
+    // 3. Heal master
+    if (ctrl->config.auto_heal && sd->status.hp > 0 && sd->battle_status.max_hp > 0) {
+        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
+        if (hp_per < ctrl->config.hp_threshold) {
+            uint8 lv = pc_checkskill(bot, AL_HEAL);
+            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
+                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
+                ctrl->last_action_tick = tick;
+                return;
+            }
+        }
+    }
+
+    common_follow(ctrl);
+}
+
+/***********************************************************************
+ *  AI - Job dispatch table
+ ***********************************************************************/
+
+static bot_mode_action_fn job_mode_table[JOBGROUP_MAX][AI_MODE_MAX] = {
+    /* NOVICE   */ { common_follow, common_support, common_standby, common_guard,   common_assault },
+    /* SWORDMAN */ { common_follow, common_support, common_standby, common_guard,   common_assault },
+    /* MAGE     */ { common_follow, common_support, common_standby, common_guard,   common_assault },
+    /* ARCHER   */ { common_follow, common_support, common_standby, common_guard,   common_assault },
+    /* ACOLYTE  */ { common_follow, acolyte_support, common_standby, acolyte_guard, common_assault },
+    /* MERCHANT */ { common_follow, common_support, common_standby, common_guard,   common_assault },
+    /* THIEF    */ { common_follow, common_support, common_standby, common_guard,   common_assault },
+};
+
+/***********************************************************************
+ *  AI - Main entry
+ ***********************************************************************/
+
 static int32 bot_ctrl_ai_sub(bot_ctrl* ctrl, t_tick tick) {
     auto bot = ctrl->bot_sd;
     auto sd = ctrl->master_sd;
@@ -220,38 +473,8 @@ static int32 bot_ctrl_ai_sub(bot_ctrl* ctrl, t_tick tick) {
     ctrl->last_thinktime = tick;
     if (bot->ud.skilltimer != INVALID_TIMER)
         return 0;
-    if (bot->ud.walktimer != INVALID_TIMER && bot->ud.walkpath.path_pos <= 2)
-        return 0;
 
-    if (ctrl->ai_state == bot_ctrl::AI_SUPPORT && DIFF_TICK(tick, bot->ud.canmove_tick) >= 0) {
-        // if (ctrl->config.auto_heal) {
-        //     uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
-        //     if (hp_per < ctrl->config.hp_threshold) {
-        //         uint8 lv = pc_checkskill(bot, AL_HEAL);
-        //         if (lv > 0) { unit_skilluse_id(bot, sd->id, AL_HEAL, lv); return 0; }
-        //     }
-        // }
-        if (ctrl->config.auto_buff) {
-            if (!sd->sc.getSCE(SC_INCREASEAGI)) {
-                uint16 lv = pc_checkskill(bot, AL_INCAGI);
-                if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_INCAGI, lv)
-                    && unit_skilluse_id(bot, sd->id, AL_INCAGI, lv) == 0) return 0;
-            }
-            if (!sd->sc.getSCE(SC_BLESSING)) {
-                uint16 lv = pc_checkskill(bot, AL_BLESSING);
-                if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_BLESSING, lv)
-                    && unit_skilluse_id(bot, sd->id, AL_BLESSING, lv) == 0) return 0;
-            }
-        }
-    }
-
-    if (!check_distance_bl(sd, bot, 3)) {
-        if (bot->ud.walktimer != INVALID_TIMER && bot->ud.target == sd->id)
-            return 0;
-        if (DIFF_TICK(tick, bot->ud.canmove_tick) < 0)
-            return 0;
-        unit_walktobl(bot, sd, 2, 0);
-    }
+    job_mode_table[ctrl->job_group][ctrl->ai_mode](ctrl);
     return 0;
 }
 
@@ -266,6 +489,24 @@ static int32 bot_ctrl_ai_foreach(map_session_data* sd, va_list ap) {
 static TIMER_FUNC(bot_ctrl_ai_timer) {
     map_foreachpc(bot_ctrl_ai_foreach, tick);
     return 0;
+}
+
+/***********************************************************************
+ *  Job group mapping
+ ***********************************************************************/
+
+bot_job_group bot_class_to_group(int32 class_) {
+    int32 base = class_ & MAPID_FIRSTMASK;
+    switch (base) {
+    case MAPID_NOVICE:   return JOBGROUP_NOVICE;
+    case MAPID_SWORDMAN: return JOBGROUP_SWORDMAN;
+    case MAPID_MAGE:     return JOBGROUP_MAGE;
+    case MAPID_ARCHER:   return JOBGROUP_ARCHER;
+    case MAPID_ACOLYTE:  return JOBGROUP_ACOLYTE;
+    case MAPID_MERCHANT: return JOBGROUP_MERCHANT;
+    case MAPID_THIEF:    return JOBGROUP_THIEF;
+    default:             return JOBGROUP_NOVICE;
+    }
 }
 
 /***********************************************************************
@@ -351,11 +592,16 @@ static bot_ctrl* bot_ctrl_bring_online(map_session_data* master, int32 bot_aid, 
     ctrl->master_aid = master->status.account_id;
     ctrl->bot_aid = bot_aid;
     ctrl->bot_cid = bot_cid;
-    ctrl->ai_state = bot_ctrl::AI_SUPPORT;
+    ctrl->ai_mode = AI_SUPPORT;
+    ctrl->job_group = bot_class_to_group(bot_sd->status.class_);
     ctrl->config.hp_threshold = 80;
+    ctrl->config.sp_threshold = 20;
     ctrl->config.auto_buff = true;
     ctrl->config.auto_heal = true;
+    ctrl->config.auto_loot = true;
     ctrl->last_thinktime = gettick();
+    ctrl->target_mob_id = 0;
+    ctrl->last_action_tick = gettick();
 
     master->bot = ctrl;
     bot_ctrl_db[master->status.char_id] = ctrl;

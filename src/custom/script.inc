@@ -49,7 +49,7 @@ BUILDIN_FUNC(bot_getinfo)
     else if (strcmp(field, "status_point") == 0) val = bot->status.status_point;
     else if (strcmp(field, "skill_point") == 0)  val = bot->status.skill_point;
     else if (strcmp(field, "class") == 0)        val = bot->status.class_;
-    else if (strcmp(field, "ai_state") == 0)     val = sd->bot->ai_state;
+    else if (strcmp(field, "ai_state") == 0)     val = sd->bot->ai_mode;
     else if (strcmp(field, "hp_threshold") == 0) val = sd->bot->config.hp_threshold;
     else ShowWarning("bot_getinfo: unknown field '%s'.\n", field);
 
@@ -276,8 +276,8 @@ BUILDIN_FUNC(bot_ai_mode)
         return SCRIPT_CMD_SUCCESS;
 
     int32 mode = script_getnum(st, 2);
-    if (mode >= 0 && mode <= 2)
-        sd->bot->ai_state = (decltype(sd->bot->ai_state))mode;
+    if (mode >= 0 && mode < AI_MODE_MAX)
+        sd->bot->ai_mode = (bot_ai_mode)mode;
     return SCRIPT_CMD_SUCCESS;
 }
 

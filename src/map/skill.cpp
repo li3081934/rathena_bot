@@ -23,6 +23,7 @@
 
 #include "achievement.hpp"
 #include "battle.hpp"
+#include "bot_ctrl.hpp"
 #include "battleground.hpp"
 #include "chrif.hpp"
 #include "clif.hpp"
@@ -4584,6 +4585,18 @@ int32 skill_castend_nodamage_id (block_list *src, block_list *bl, uint16 skill_i
 				skill_castend_nodamage_id);
 		}
 		break;
+	case BOT_MODE_FOLLOW:
+	case BOT_MODE_SUPPORT:
+	case BOT_MODE_STANDBY:
+	case BOT_MODE_GUARD:
+	case BOT_MODE_ASSAULT: {
+		map_session_data* sd = BL_CAST(BL_PC, src);
+		if (sd && sd->bot) {
+			sd->bot->ai_mode = (bot_ai_mode)(skill_id - BOT_MODE_FOLLOW);
+		}
+		clif_skill_nodamage(src, *bl, skill_id, 1);
+		return 0;
+	}
 	default: {
 		std::shared_ptr<s_skill_db> skill = skill_db.find(skill_id);
 
