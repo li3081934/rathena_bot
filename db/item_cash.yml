@@ -119,6 +119,409 @@ Body:
       - Item: Clothing_Dye_Coupon
         Price: 200
 
+  - Tab: New
+    Items:
+      - Item: C_Valkyrie_Circlet
+        Price: 500
+      - Item: C_Imperial_Feather
+        Price: 500
+      - Item: C_Minions_Of_Devil
+        Price: 500
+      - Item: C_Anemos_Mask
+        Price: 500
+      - Item: C_Flutter_Butterfly
+        Price: 500
+      - Item: C_Angel_Veil
+        Price: 500
+      - Item: C_Poker_Card_In_Mouth
+        Price: 500
+      - Item: C_Angel_Fluttering
+        Price: 500
+      - Item: C_Classical_Fhat
+        Price: 500
+      - Item: C_Satanic_Chain_P
+        Price: 500
+      - Item: C_Twinkle_Star_Button
+        Price: 500
+      - Item: C_Black_Musang_J
+        Price: 500
+      - Item: C_Skarlet_Band_EXE
+        Price: 500
+      - Item: C_VesperHeadGear_J
+        Price: 500
+      - Item: C_Droop_Gunslinger_J
+        Price: 500
+      - Item: C_Bio_Protector
+        Price: 500
+      - Item: C_Hat_of_Goggle
+        Price: 500
+      - Item: C_Disapear_Time_J
+        Price: 500
+      - Item: C_Hunters_Dinner
+        Price: 500
+      - Item: C_Cow_Hat1_J
+        Price: 500
+      - Item: C_Artist_Silk_Hat
+        Price: 500
+      - Item: C_EXE_Wing_Cap_TH
+        Price: 500
+      - Item: C_Freyja_Crown_J
+        Price: 500
+      - Item: C_Gold_Ingot_Poring_J
+        Price: 500
+      - Item: C_Phigasia_Scarf_EXE
+        Price: 500
+      - Item: C_Choco_Banana
+        Price: 500
+      - Item: C_King_Of_Spirit_Circle
+        Price: 500
+      - Item: C_RTC_Second_Best
+        Price: 500
+      - Item: C_P_blossom_Hairpin
+        Price: 500
+      - Item: C_Rose_Crispinette
+        Price: 500
+      - Item: C_Rhythm_Hairband
+        Price: 500
+      - Item: C_Hand_Of_Devil
+        Price: 500
+      - Item: C_Boitata_Hat_J
+        Price: 500
+      - Item: C_BLACKDEATHKING_GOLDEN
+        Price: 500
+      - Item: C_Helm_Of_Sun_V
+        Price: 500
+      - Item: C_Rebirth_Circlet
+        Price: 500
+      - Item: C_Kings_Crown_A
+        Price: 500
+      - Item: C_Love_Guard_V
+        Price: 500
+      - Item: C_Helmet_Of_Siegfried_J
+        Price: 500
+      - Item: C_Splash_Hat
+        Price: 500
+      - Item: C_Beer_Server_TH
+        Price: 500
+      - Item: C_15th_Nov_Helmet
+        Price: 500
+      - Item: C_Somtam
+        Price: 500
+      - Item: C_Wichienmaat_Bangkaew
+        Price: 500
+      - Item: C_Hair_Of_The_Strong
+        Price: 500
+      - Item: C_Will_O_Wisp
+        Price: 500
+      - Item: C_MoonStar_Accessory
+        Price: 500
+      - Item: C_Spirit_Of_Chung_E
+        Price: 500
+      - Item: C_World_Star
+        Price: 500
+      - Item: C_Guard_Of_Neptune
+        Price: 500
+      - Item: C_Aladdin_Lamp
+        Price: 500
+      - Item: C_Gemma_Hairband
+        Price: 500
+      - Item: C_Gemini_Eyes
+        Price: 500
+      - Item: C_Cat_Poring_Balloon
+        Price: 500
+      - Item: C_Gigant_Helm
+        Price: 500
+      - Item: C_Moon_Eyepatch
+        Price: 500
+      - Item: C_Elder_Devil_Horn
+        Price: 500
+      - Item: C_Shiba_Inu
+        Price: 500
+      - Item: C_Wildcat_Knit_Cap
+        Price: 500
+      - Item: C_SmartUnderRim_Glasses
+        Price: 500
+      - Item: C_CatEars_Cyber_HeadP_R
+        Price: 500
+      - Item: C_BearBalloon_TW
+        Price: 500
+      - Item: C_BaphoJ_Parachute_TW
+        Price: 500
+      - Item: C_Master_Cat
+        Price: 500
+      - Item: C_Luna_On_Shoulder
+        Price: 500
+      - Item: C_Melon_Cap
+        Price: 500
+      - Item: C_Small_ocean
+        Price: 500
+      - Item: C_S_Circlet_Of_Time
+        Price: 500
+      - Item: C_Green_Feeler
+        Price: 500
+      - Item: C_Jack_A_Dandy
+        Price: 500
+      - Item: C_Helm
+        Price: 500
+      - Item: C_Sharp_Gear
+        Price: 500
+      - Item: C_Iron_Cane
+        Price: 500
+      - Item: C_Angelic_Chain
+        Price: 500
+      - Item: C_Wild_Rose
+        Price: 500
+      - Item: C_Cube_Mask
+        Price: 500
+      - Item: C_Red_Bunny_Band
+        Price: 500
+      - Item: C_Spore_Hat
+        Price: 500
+      - Item: C_Tha_Despero_Mask
+        Price: 500
+      - Item: C_Sinsuncho_Hat
+        Price: 500
+      - Item: C_Rose_Corsage
+        Price: 500
+      - Item: C_Gryphon_Hat
+        Price: 500
+      - Item: C_Reginleif_Hairband
+        Price: 500
+      - Item: C_Rabbit_Earplug
+        Price: 500
+      - Item: C_Romantic_White_Flower
+        Price: 500
+      - Item: C_Devil_Whisper
+        Price: 500
+      - Item: C_Tare_Neko_Cru
+        Price: 500
+      - Item: C_Boys_Cap
+        Price: 500
+      - Item: C_Valkyrie_Helm
+        Price: 500
+      - Item: C_Deviruchi_Cap
+        Price: 500
+      - Item: C_Frog_Cap
+        Price: 500
+      - Item: C_Magestic_Goat
+        Price: 500
+      - Item: C_Blush
+        Price: 500
+      - Item: C_Elven_Ears
+        Price: 500
+      - Item: C_Centimental_Flower
+        Price: 500
+      - Item: C_Assassin_Mask_
+        Price: 500
+      - Item: C_Hahoe_Mask
+        Price: 500
+      - Item: C_Crescent_Helm
+        Price: 500
+      - Item: C_Kabuki_Mask
+        Price: 500
+      - Item: C_Ayothaya_Hat
+        Price: 500
+      - Item: PC_Costume_Box
+        Price: 500
+      - Item: Louise_Costume_Box
+        Price: 500
+      - Item: Costume_Festival_Box2
+        Price: 500
+      - Item: 2017_GStar_CostumeBox
+        Price: 500
+      - Item: Costume_Set1_Kr
+        Price: 500
+      - Item: Nyang_Costume_Recipe
+        Price: 500
+      - Item: Cachua_Costume_Box
+        Price: 500
+      - Item: Special_Costume_Box
+        Price: 500
+      - Item: Special_Costume_Box_
+        Price: 500
+      - Item: S_Costume_Box
+        Price: 500
+      - Item: Payment_Costume_Box1
+        Price: 500
+      - Item: Payment_Costume_Box2
+        Price: 500
+      - Item: 21th_Costume_Select
+        Price: 500
+      - Item: 21th_Costume_Collection
+        Price: 500
+      - Item: Cinnamon_Costume_Box
+        Price: 500
+      - Item: 2023_Xmas_Costume
+        Price: 500
+      - Item: Sonic_Costume_Pack
+        Price: 500
+      - Item: EP21_Costume_Box1
+        Price: 500
+      - Item: EP21_Costume_Box2
+        Price: 500
+      - Item: Calender_Costume_Box
+        Price: 500
+      - Item: If_Costume_Scroll
+        Price: 500
+      - Item: Eypgt_Costume_Select1
+        Price: 500
+      - Item: Eypgt_Costume_Select2
+        Price: 500
+      - Item: Eypgt_Costume_Select3
+        Price: 500
+      - Item: 23th_Costume_A
+        Price: 500
+      - Item: 23th_Costume_B
+        Price: 500
+      - Item: 23th_Costume_C
+        Price: 500
+      - Item: SP_Costume_Select
+        Price: 500
+      - Item: SP_Costume_Collection
+        Price: 500
+      - Item: Select_Costume_DEC_1
+        Price: 500
+      - Item: Select_Costume_DEC_2
+        Price: 500
+      - Item: Select_Costume_DEC_3
+        Price: 500
+      - Item: CostumeMileage_Package1
+        Price: 500
+      - Item: CostumeMileage_Package2
+        Price: 500
+      - Item: CostumeMileage_Package3
+        Price: 500
+      - Item: CostumeMileage_Package4
+        Price: 500
+      - Item: CostumeMileage_Package5
+        Price: 500
+      - Item: CostumeMileage_Package6
+        Price: 500
+      - Item: CostumeMilePack_26_1
+        Price: 500
+      - Item: CostumeMilePack_26_2
+        Price: 500
+      - Item: CostumeMilePack_26_3
+        Price: 500
+      - Item: CostumeMilePack_27_1
+        Price: 500
+      - Item: CostumeMilePack_27_2
+        Price: 500
+      - Item: CostumeMilePack_27_3
+        Price: 500
+      - Item: CostumeMilePack_29_1
+        Price: 500
+      - Item: CostumeMilePack_29_2
+        Price: 500
+      - Item: CostumeMilePack_29_3
+        Price: 500
+      - Item: CostumeMilePack_30_1
+        Price: 500
+      - Item: CostumeMilePack_30_2
+        Price: 500
+      - Item: CostumeMilePack_30_3
+        Price: 500
+      - Item: CostumeMilePack_31_1
+        Price: 500
+      - Item: CostumeMilePack_31_2
+        Price: 500
+      - Item: CostumeMilePack_31_3
+        Price: 500
+      - Item: CostumeMilePack_32_1
+        Price: 500
+      - Item: CostumeMilePack_32_2
+        Price: 500
+      - Item: CostumeMilePack_32_3
+        Price: 500
+      - Item: CostumeMilePack_33_1
+        Price: 500
+      - Item: CostumeMilePack_33_2
+        Price: 500
+      - Item: CostumeMilePack_33_3
+        Price: 500
+      - Item: CostumeMilePack_34_1
+        Price: 500
+      - Item: CostumeMilePack_34_2
+        Price: 500
+      - Item: CostumeMilePack_34_3
+        Price: 500
+      - Item: CostumeMilePack_35_1
+        Price: 500
+      - Item: CostumeMilePack_35_2
+        Price: 500
+      - Item: CostumeMilePack_35_3
+        Price: 500
+      - Item: CostumeMilePack_36_1
+        Price: 500
+      - Item: CostumeMilePack_36_2
+        Price: 500
+      - Item: CostumeMilePack_36_3
+        Price: 500
+      - Item: CostumeMilePack_37_1
+        Price: 500
+      - Item: CostumeMilePack_37_2
+        Price: 500
+      - Item: CostumeMilePack_37_3
+        Price: 500
+      - Item: If_Costume_Box
+        Price: 500
+      - Item: Eypgt_Costume_Box1
+        Price: 500
+      - Item: Eypgt_Costume_Box2
+        Price: 500
+      - Item: Eypgt_Costume_Box3
+        Price: 500
+      - Item: 2025_Costume_Box1
+        Price: 500
+      - Item: 2025_Costume_Box2
+        Price: 500
+      - Item: If_2025_Costume_Box1
+        Price: 500
+      - Item: If_2025_Costume_Box2
+        Price: 500
+      - Item: CostumeMilePack_38_1
+        Price: 500
+      - Item: CostumeMilePack_38_2
+        Price: 500
+      - Item: CostumeMilePack_38_3
+        Price: 500
+      - Item: Cloud_Costume_Pack
+        Price: 500
+      - Item: CostumeMilePack_39_1
+        Price: 500
+      - Item: CostumeMilePack_39_2
+        Price: 500
+      - Item: CostumeMilePack_39_3
+        Price: 500
+      - Item: 23th_Costume_Pack_A
+        Price: 500
+      - Item: 23th_Costume_Pack_B
+        Price: 500
+      - Item: 23th_Costume_Pack_C
+        Price: 500
+      - Item: CostumeMilePack_SP_1
+        Price: 500
+      - Item: CostumeMilePack_SP_2
+        Price: 500
+      - Item: CostumeMilePack_SP_3
+        Price: 500
+      - Item: CostumeMilePack_SP_4
+        Price: 500
+      - Item: CostumeMilePack_41_1
+        Price: 500
+      - Item: CostumeMilePack_41_2
+        Price: 500
+      - Item: CostumeMilePack_41_3
+        Price: 500
+      - Item: Niflheim_Costume_1
+        Price: 500
+      - Item: Niflheim_Costume_2
+        Price: 500
+      - Item: Niflheim_Costume_3
+        Price: 500
+      - Item: Niflheim_Costume_4
+        Price: 500
+
 Footer:
   Imports:
     - Path: db/import/item_cash.yml

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Manager</title>
+<link rel="stylesheet" href="/bot/style.css">
+</head>
+<body>
+<div class="container">
+  <h1>Bot Manager</h1>
+  <div class="toolbar">
+    <label>AID: <input type="number" id="aid" placeholder="AID"></label>
+    <button id="refresh">Refresh</button>
+    <label class="auto-toggle"><input type="checkbox" id="autoRef"> Auto 5s</label>
+  </div>
+  <div id="status" class="status-msg"></div>
+
+  <div id="bot-detail" class="hidden">
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="stats">Stats</button>
+      <button class="tab" data-tab="skills">Skills</button>
+      <button class="tab" data-tab="rules">Rules</button>
+    </div>
+
+    <!-- Overview -->
+    <div id="tab-overview" class="tab-content active">
+      <h2 id="bot-name"></h2>
+      <div class="bar-row"><span class="bar-label">HP</span><div class="bar"><div id="hpBar" class="bar-fill hp-fill"></div></div><span id="hpText"></span></div>
+      <div class="bar-row"><span class="bar-label">SP</span><div class="bar"><div id="spBar" class="bar-fill sp-fill"></div></div><span id="spText"></span></div>
+      <table class="info-table">
+        <tr><td>Level</td><td id="lv"></td></tr>
+        <tr><td colspan="2">
+          <div class="exp-row"><span class="exp-label">Base</span><div class="bar"><div id="baseExpBar" class="bar-fill exp-fill"></div></div><span id="baseExpText" class="exp-text"></span></div>
+          <div class="exp-row"><span class="exp-label">Job</span><div class="bar"><div id="jobExpBar" class="bar-fill exp-fill"></div></div><span id="jobExpText" class="exp-text"></span></div>
+        </td></tr>
+        <tr><td>Job</td><td id="job"></td></tr>
+        <tr><td>Position</td><td id="pos"></td></tr>
+        <tr><td>Zeny</td><td id="zeny"></td></tr>
+        <tr><td>Mode</td><td id="mode"></td></tr>
+      </table>
+      <div class="actions">
+        <button class="mode" data-mode="0">Follow</button>
+        <button class="mode" data-mode="1">Standby</button>
+        <button id="recall">Recall</button>
+        <button id="revive">Revive</button>
+        <button id="destroy" class="danger">Destroy</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="tab-stats" class="tab-content">
+      <h2>Status Points: <span id="sp_pts">0</span></h2>
+      <div id="stat-list"></div>
+    </div>
+
+    <!-- Skills -->
+    <div id="tab-skills" class="tab-content">
+      <h2>Skill Points: <span id="sk_pts">0</span></h2>
+      <div id="skill-list"></div>
+    </div>
+
+    <!-- Rules -->
+    <div id="tab-rules" class="tab-content">
+      <div class="rules-toolbar">
+        <button id="newRule">+ New Rule</button>
+        <button id="saveRules" class="primary">Save All Rules</button>
+      </div>
+      <div id="rules-container"></div>
+    </div>
+  </div>
+</div>
+<script src="/bot/script.js"></script>
+</body>
+</html>

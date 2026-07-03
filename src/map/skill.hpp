@@ -2603,14 +2603,7 @@ enum e_skill {
 	ABR_DUAL_CANNON_FIRE,
 	ABR_NET_REPAIR,
 	ABR_NET_SUPPORT,
-	ABR_INFINITY_BUSTER,
-
-// Bot mode toggle skills
-	BOT_MODE_FOLLOW = 30001,
-	BOT_MODE_SUPPORT,
-	BOT_MODE_STANDBY,
-	BOT_MODE_GUARD,
-	BOT_MODE_ASSAULT
+	ABR_INFINITY_BUSTER
 };
 
 /// The client view ids for land skills.

@@ -118,11 +118,7 @@ prontera,155,185,4	script	Bot Manager#botman	4_M_ORIENT01,{
 		case 1:
 			if (bot_create(0)) {
 				getitem 61001, 1;
-skill 30001, 1, 0;
-skill 30002, 1, 0;
-skill 30003, 1, 0;
-skill 30004, 1, 0;
-skill 30005, 1, 0;
+
 				mes "[Bot Manager]";
 				mes "Your Novice Bot is ready!";
 				mes "Use Bot Control Crystal";
@@ -137,11 +133,7 @@ skill 30005, 1, 0;
 		case 2:
 			if (bot_create(4)) {
 				getitem 61001, 1;
-skill 30001, 1, 0;
-skill 30002, 1, 0;
-skill 30003, 1, 0;
-skill 30004, 1, 0;
-skill 30005, 1, 0;
+
 				mes "[Bot Manager]";
 				mes "Your Acolyte Bot is ready!";
 				mes "Base 1/Job 1 with NV_BASIC Lv9!";

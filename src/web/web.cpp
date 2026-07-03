@@ -497,6 +497,31 @@ bool WebServer::initialize( int32 argc, char* argv[] ){
 	http_server->Post("/userconfig/load", userconfig_load);
 	http_server->Post("/userconfig/save", userconfig_save);
 
+	// Bot API proxy (forward to map-server HTTP API)
+	static httplib::Client map_api("http://127.0.0.1:5122");
+
+	http_server->Get("/api/bot/status", [](const Request& req, Response& res) {
+		std::string qs = "/api/bot/status?aid=" + req.get_param_value("aid");
+		auto r = map_api.Get(qs.c_str());
+		if (r) {
+			res.set_content(r->body, "application/json");
+		} else {
+			res.set_content("{\"code\":-1,\"msg\":\"map server unreachable\"}", "application/json");
+		}
+	});
+
+	http_server->Post("/api/bot/cmd", [](const Request& req, Response& res) {
+		auto r = map_api.Post("/api/bot/cmd", req.body, "application/json");
+		if (r) {
+			res.set_content(r->body, "application/json");
+		} else {
+			res.set_content("{\"code\":-1,\"msg\":\"map server unreachable\"}", "application/json");
+		}
+	});
+
+	// Serve bot management page
+	http_server->set_mount_point("/bot", "./web_bot");
+
 	// set up logger
 	http_server->set_logger(logger);
 

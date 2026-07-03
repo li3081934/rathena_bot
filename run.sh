@@ -93,16 +93,18 @@ case "$1" in
     screen -dmS map ./map-server
     wait_for_port 5121 "map-server"
 
+    echo "Starting web-server..."
+    nohup ./web-server > log/web-server.log 2>&1 &
     echo "Done."
     ;;
 
   stop)
     echo "Stopping rAthena..."
-    for svr in map-server char-server login-server; do
+    for svr in map-server char-server login-server web-server; do
         pkill -15 -f "./$svr" 2>/dev/null
     done
     sleep 5
-    for svr in map-server char-server login-server; do
+    for svr in map-server char-server login-server web-server; do
         if pgrep -f "./$svr" >/dev/null 2>&1; then
             pkill -9 -f "./$svr" 2>/dev/null
         fi
@@ -115,11 +117,11 @@ case "$1" in
 
   restart)
     echo "Restarting rAthena..."
-    for svr in map-server char-server login-server; do
+    for svr in map-server char-server login-server web-server; do
         pkill -15 -f "./$svr" 2>/dev/null
     done
     sleep 3
-    for svr in map-server char-server login-server; do
+    for svr in map-server char-server login-server web-server; do
         if pgrep -f "./$svr" >/dev/null 2>&1; then
             pkill -9 -f "./$svr" 2>/dev/null
         fi
@@ -136,6 +138,8 @@ case "$1" in
     screen -dmS map ./map-server
     wait_for_port 5121 "map-server"
 
+    echo "Starting web-server..."
+    nohup ./web-server > log/web-server.log 2>&1 &
     echo "Done."
     ;;
 
@@ -155,6 +159,11 @@ case "$1" in
             echo "$svr-server: stopped"
         fi
     done
+    if pgrep -f "./web-server" >/dev/null 2>&1; then
+        echo "web-server: running"
+    else
+        echo "web-server: stopped"
+    fi
     ;;
 
   reload-sql)
@@ -180,5 +189,7 @@ case "$1" in
 
   *)
     echo "Usage: $0 {start|stop|restart|status|reload-sql|clean-db}"
+    echo ""
+    echo "web-server is automatically started/stopped with the rest."
     ;;
 esac

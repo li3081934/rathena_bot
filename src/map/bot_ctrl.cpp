@@ -1,9 +1,17 @@
 #include "bot_ctrl.hpp"
 
+#include <algorithm>
+#include <set>
+#include <thread>
+#include <unordered_map>
+
 #include <common/malloc.hpp>
 #include <common/nullpo.hpp>
 #include <common/showmsg.hpp>
 #include <common/sql.hpp>
+
+#include <httplib.h>
+#include <nlohmann/json.hpp>
 
 #include "battle.hpp"
 #include "chrif.hpp"
@@ -17,16 +25,18 @@
 #include "status.hpp"
 #include "unit.hpp"
 
-#include <unordered_map>
+static std::mutex bot_ctrl_db_mutex;
 static std::unordered_map<int32, bot_ctrl*> bot_ctrl_db;
 
 extern Sql* mmysql_handle;
+static const char* bot_rules_table = "bot_rules";
 
 /***********************************************************************
  *  查找
  ***********************************************************************/
 bot_ctrl* bot_ctrl_search(map_session_data* master) {
     if (!master) return nullptr;
+    std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
     auto it = bot_ctrl_db.find(master->status.char_id);
     return (it != bot_ctrl_db.end()) ? it->second : nullptr;
 }
@@ -209,79 +219,8 @@ static bool save_bot_inventory(map_session_data* sd) {
 }
 
 /***********************************************************************
- *  AI - Common Behaviours (fallback for all jobs)
+ *  AI - Rule Engine
  ***********************************************************************/
-
-static void common_follow(bot_ctrl* ctrl) {
-    auto bot = ctrl->bot_sd;
-    auto sd = ctrl->master_sd;
-    if (!sd || !bot) return;
-    if (check_distance_bl(sd, bot, 3)) return;
-    if (DIFF_TICK(gettick(), bot->ud.canmove_tick) < 0) return;
-    unit_walktobl(bot, sd, 2, 0);
-}
-
-static void common_standby(bot_ctrl* ctrl) {
-    auto bot = ctrl->bot_sd;
-    if (!bot) return;
-    // Self-heal if HP < 30%
-    if (ctrl->config.auto_heal && bot->status.hp > 0) {
-        uint8 hp_per = (uint8)((uint64)bot->battle_status.hp * 100 / bot->battle_status.max_hp);
-        if (hp_per < 30) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, bot->id, AL_HEAL, lv);
-                return;
-            }
-        }
-    }
-}
-
-static void common_support(bot_ctrl* ctrl) {
-    auto bot = ctrl->bot_sd;
-    auto sd = ctrl->master_sd;
-    if (!bot || !sd) return;
-    t_tick tick = gettick();
-
-    // Heal master if HP low
-    if (ctrl->config.auto_heal && sd->status.hp > 0
-        && DIFF_TICK(tick, ctrl->last_action_tick) > 1000) {
-        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
-        if (hp_per < ctrl->config.hp_threshold) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
-                ctrl->last_action_tick = tick;
-                return;
-            }
-        }
-    }
-
-    common_follow(ctrl);
-}
-
-static void common_guard(bot_ctrl* ctrl) {
-    auto bot = ctrl->bot_sd;
-    auto sd = ctrl->master_sd;
-    if (!bot || !sd) return;
-    t_tick tick = gettick();
-
-    // Heal master if needed
-    if (ctrl->config.auto_heal && sd->status.hp > 0
-        && DIFF_TICK(tick, ctrl->last_action_tick) > 1000) {
-        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
-        if (hp_per < ctrl->config.hp_threshold) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
-                ctrl->last_action_tick = tick;
-                return;
-            }
-        }
-    }
-
-    common_follow(ctrl);
-}
 
 struct bot_mob_search {
     block_list* best;
@@ -309,160 +248,136 @@ static block_list* bot_find_nearest_mob(block_list* origin, int16 range) {
     return search.best;
 }
 
-static void common_assault(bot_ctrl* ctrl) {
+static void bot_follow_master(map_session_data* bot, map_session_data* sd) {
+    if (!bot || !sd) return;
+    if (check_distance_bl(sd, bot, 3)) return;
+    if (DIFF_TICK(gettick(), bot->ud.canmove_tick) < 0) return;
+    unit_walktobl(bot, sd, 2, 0);
+}
+
+// Evaluate a single condition
+static bool bot_eval_cond(bot_ctrl* ctrl, BotRuleCond& c) {
+    auto bot = ctrl->bot_sd;
+    auto sd = ctrl->master_sd;
+    if (!bot || !sd) return false;
+    map_session_data* t = (c.source == SRC_MASTER) ? sd : bot;
+
+    switch (c.type) {
+    case COND_HP_PCT: {
+        int32 actual = 0;
+        if (t->battle_status.max_hp > 0)
+            actual = (int32)((int64)t->battle_status.hp * 100 / t->battle_status.max_hp);
+        switch (c.op) {
+        case OP_LT: return actual < c.value;
+        case OP_GT: return actual > c.value;
+        case OP_EQ: return actual == c.value;
+        case OP_NE: return actual != c.value;
+        case OP_LE: return actual <= c.value;
+        case OP_GE: return actual >= c.value;
+        }
+        return false;
+    }
+    case COND_SP_PCT: {
+        int32 actual = 0;
+        if (t->battle_status.max_sp > 0)
+            actual = (int32)((int64)t->battle_status.sp * 100 / t->battle_status.max_sp);
+        switch (c.op) {
+        case OP_LT: return actual < c.value;
+        case OP_GT: return actual > c.value;
+        case OP_EQ: return actual == c.value;
+        case OP_NE: return actual != c.value;
+        case OP_LE: return actual <= c.value;
+        case OP_GE: return actual >= c.value;
+        }
+        return false;
+    }
+    case COND_SC_MISSING:
+        return t->sc.getSCE((sc_type)c.extra) == nullptr;
+    case COND_SC_ACTIVE:
+        return t->sc.getSCE((sc_type)c.extra) != nullptr;
+    case COND_IS_DEAD:
+        return t->status.hp <= 0;
+    case COND_DIST_GT:
+        return !check_distance_bl(sd, bot, c.value);
+    case COND_DIST_LT:
+        return check_distance_bl(sd, bot, c.value);
+    case COND_HAS_ENEMY:
+        return bot_find_nearest_mob(bot, (int16)c.value) != nullptr;
+    }
+    return false;
+}
+
+// Execute a single action
+static void bot_exec_action(bot_ctrl* ctrl, BotRuleAction& a) {
     auto bot = ctrl->bot_sd;
     auto sd = ctrl->master_sd;
     if (!bot || !sd) return;
 
-    block_list* mob = bot_find_nearest_mob(bot, 8);
-    if (mob) {
-        unit_attack(bot, mob->id, 1);
-        ctrl->target_mob_id = mob->id;
-        return;
+    switch (a.type) {
+    case ACT_USE_SKILL: {
+        block_list* target;
+        if (a.target == 0)
+            target = sd;
+        else
+            target = bot;
+        uint16 lv = pc_checkskill(bot, a.skill_id);
+        if (lv > 0 && bot->battle_status.sp >= skill_get_sp(a.skill_id, lv))
+            unit_skilluse_id(bot, target->id, a.skill_id, lv);
+        break;
     }
-
-    common_follow(ctrl);
+    case ACT_ATTACK_NEAREST: {
+        block_list* mob = bot_find_nearest_mob(bot, 8);
+        if (mob) {
+            unit_attack(bot, mob->id, 1);
+            ctrl->target_mob_id = mob->id;
+        }
+        break;
+    }
+    case ACT_RECALL: {
+        if (bot->prev != nullptr)
+            unit_remove_map(bot, CLR_OUTSIGHT);
+        bot->mapindex = sd->mapindex;
+        bot->m = sd->m;
+        bot->x = sd->x + 1;
+        bot->y = sd->y;
+        map_addblock(bot);
+        clif_spawn(bot);
+        break;
+    }
+    case ACT_SAY: {
+        if (a.message[0])
+            clif_displaymessage(sd->fd, a.message);
+        break;
+    }
+    }
 }
 
-/***********************************************************************
- *  AI - Acolyte-specific behaviours
- ***********************************************************************/
+// Evaluate all rules - returns true if any rule fired
+static bool bot_eval_rules(bot_ctrl* ctrl) {
+    for (auto& rule : ctrl->rules) {
+        if (!rule.enabled) continue;
 
-static void acolyte_support(bot_ctrl* ctrl) {
-    auto bot = ctrl->bot_sd;
-    auto sd = ctrl->master_sd;
-    if (!bot || !sd) return;
-    t_tick tick = gettick();
-
-    if (DIFF_TICK(tick, ctrl->last_action_tick) < 500)
-        goto _follow;
-
-    // 1. Self-heal if HP < 30%
-    if (bot->status.hp > 0) {
-        uint8 my_hp = (uint8)((uint64)bot->battle_status.hp * 100 / bot->battle_status.max_hp);
-        if (my_hp < 30) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, bot->id, AL_HEAL, lv);
-                ctrl->last_action_tick = tick;
-                return;
-            }
+        bool match;
+        if (rule.cond_logic == COND_AND) {
+            match = true;
+            for (auto& c : rule.conditions)
+                if (!bot_eval_cond(ctrl, c)) { match = false; break; }
+        } else {
+            match = false;
+            for (auto& c : rule.conditions)
+                if (bot_eval_cond(ctrl, c)) { match = true; break; }
         }
+        if (!match) continue;
+
+        // Fire this rule: execute all actions
+        for (auto& a : rule.actions)
+            bot_exec_action(ctrl, a);
+        return true;
     }
-
-    // 2. Heal master
-    if (ctrl->config.auto_heal && sd->status.hp > 0 && sd->battle_status.max_hp > 0) {
-        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
-        if (hp_per < ctrl->config.hp_threshold) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
-                ctrl->last_action_tick = tick;
-                return;
-            }
-        }
-    }
-
-    // 3. Buffs
-    if (ctrl->config.auto_buff) {
-        uint8 lv;
-        lv = pc_checkskill(bot, AL_BLESSING);
-        if (lv > 0 && !sd->sc.getSCE(SC_BLESSING)
-            && bot->battle_status.sp >= skill_get_sp(AL_BLESSING, lv)) {
-            unit_skilluse_id(bot, sd->id, AL_BLESSING, lv);
-            ctrl->last_action_tick = tick;
-            return;
-        }
-        lv = pc_checkskill(bot, AL_INCAGI);
-        if (lv > 0 && !sd->sc.getSCE(SC_INCREASEAGI)
-            && bot->battle_status.sp >= skill_get_sp(AL_INCAGI, lv)) {
-            unit_skilluse_id(bot, sd->id, AL_INCAGI, lv);
-            ctrl->last_action_tick = tick;
-            return;
-        }
-        lv = pc_checkskill(bot, PR_KYRIE);
-        if (lv > 0 && !sd->sc.getSCE(SC_KYRIE)
-            && bot->battle_status.sp >= skill_get_sp(PR_KYRIE, lv)) {
-            unit_skilluse_id(bot, sd->id, PR_KYRIE, lv);
-            ctrl->last_action_tick = tick;
-            return;
-        }
-        lv = pc_checkskill(bot, HP_ASSUMPTIO);
-        if (lv > 0 && !sd->sc.getSCE(SC_ASSUMPTIO)
-            && bot->battle_status.sp >= skill_get_sp(HP_ASSUMPTIO, lv)) {
-            unit_skilluse_id(bot, sd->id, HP_ASSUMPTIO, lv);
-            ctrl->last_action_tick = tick;
-            return;
-        }
-    }
-
-_follow:
-    common_follow(ctrl);
+    return false;
 }
 
-static void acolyte_guard(bot_ctrl* ctrl) {
-    auto bot = ctrl->bot_sd;
-    auto sd = ctrl->master_sd;
-    if (!bot || !sd) return;
-    t_tick tick = gettick();
-
-    // 1. Self-heal if HP < 30%
-    if (bot->status.hp > 0) {
-        uint8 my_hp = (uint8)((uint64)bot->battle_status.hp * 100 / bot->battle_status.max_hp);
-        if (my_hp < 30) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, bot->id, AL_HEAL, lv);
-                ctrl->last_action_tick = tick;
-                return;
-            }
-        }
-    }
-
-    // 2. Revive master
-    if (sd->status.hp <= 0 && sd->status.char_id > 0) {
-        uint8 lv = pc_checkskill(bot, ALL_RESURRECTION);
-        if (lv > 0 && bot->battle_status.sp >= skill_get_sp(ALL_RESURRECTION, lv)) {
-            unit_skilluse_id(bot, sd->id, ALL_RESURRECTION, lv);
-            ctrl->last_action_tick = tick;
-            return;
-        }
-    }
-
-    // 3. Heal master
-    if (ctrl->config.auto_heal && sd->status.hp > 0 && sd->battle_status.max_hp > 0) {
-        uint8 hp_per = (uint8)((uint64)sd->battle_status.hp * 100 / sd->battle_status.max_hp);
-        if (hp_per < ctrl->config.hp_threshold) {
-            uint8 lv = pc_checkskill(bot, AL_HEAL);
-            if (lv > 0 && bot->battle_status.sp >= skill_get_sp(AL_HEAL, lv)) {
-                unit_skilluse_id(bot, sd->id, AL_HEAL, lv);
-                ctrl->last_action_tick = tick;
-                return;
-            }
-        }
-    }
-
-    common_follow(ctrl);
-}
-
-/***********************************************************************
- *  AI - Job dispatch table
- ***********************************************************************/
-
-static bot_mode_action_fn job_mode_table[JOBGROUP_MAX][AI_MODE_MAX] = {
-    /* NOVICE   */ { common_follow, common_support, common_standby, common_guard,   common_assault },
-    /* SWORDMAN */ { common_follow, common_support, common_standby, common_guard,   common_assault },
-    /* MAGE     */ { common_follow, common_support, common_standby, common_guard,   common_assault },
-    /* ARCHER   */ { common_follow, common_support, common_standby, common_guard,   common_assault },
-    /* ACOLYTE  */ { common_follow, acolyte_support, common_standby, acolyte_guard, common_assault },
-    /* MERCHANT */ { common_follow, common_support, common_standby, common_guard,   common_assault },
-    /* THIEF    */ { common_follow, common_support, common_standby, common_guard,   common_assault },
-};
-
-/***********************************************************************
- *  AI - Main entry
- ***********************************************************************/
-
+// Main AI subroutine
 static int32 bot_ctrl_ai_sub(bot_ctrl* ctrl, t_tick tick) {
     auto bot = ctrl->bot_sd;
     auto sd = ctrl->master_sd;
@@ -474,15 +389,31 @@ static int32 bot_ctrl_ai_sub(bot_ctrl* ctrl, t_tick tick) {
     if (bot->ud.skilltimer != INVALID_TIMER)
         return 0;
 
-    job_mode_table[ctrl->job_group][ctrl->ai_mode](ctrl);
+    // Standby mode: skip rules entirely, just stand idle
+    if (ctrl->ai_mode == AI_STANDBY)
+        return 0;
+
+    // Try rules first
+    if (bot_eval_rules(ctrl))
+        return 0;
+
+    // No rule fired → fallback to mode default
+    if (ctrl->ai_mode == AI_FOLLOW)
+        bot_follow_master(bot, sd);
     return 0;
 }
 
 static int32 bot_ctrl_ai_foreach(map_session_data* sd, va_list ap) {
     t_tick tick = va_arg(ap, t_tick);
-    auto it = bot_ctrl_db.find(sd->status.char_id);
-    if (it != bot_ctrl_db.end())
-        bot_ctrl_ai_sub(it->second, tick);
+    bot_ctrl* ctrl = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+        auto it = bot_ctrl_db.find(sd->status.char_id);
+        if (it != bot_ctrl_db.end())
+            ctrl = it->second;
+    }
+    if (ctrl)
+        bot_ctrl_ai_sub(ctrl, tick);
     return 0;
 }
 
@@ -507,6 +438,110 @@ bot_job_group bot_class_to_group(int32 class_) {
     case MAPID_THIEF:    return JOBGROUP_THIEF;
     default:             return JOBGROUP_NOVICE;
     }
+}
+
+/***********************************************************************
+ *  Rules DB - load/save
+ ***********************************************************************/
+
+static bool bot_ctrl_load_rules(bot_ctrl* ctrl) {
+    ctrl->rules.clear();
+    char* data;
+    if (SQL_ERROR == Sql_Query(mmysql_handle,
+        "SELECT rules_json FROM %s WHERE master_account_id = %d",
+        bot_rules_table, ctrl->master_aid))
+        return false;
+
+    if (Sql_NumRows(mmysql_handle) > 0 && SQL_SUCCESS == Sql_NextRow(mmysql_handle)) {
+        Sql_GetData(mmysql_handle, 0, &data, nullptr);
+        Sql_FreeResult(mmysql_handle);
+        if (!data || !data[0]) return true;
+
+        try {
+            auto j = nlohmann::json::parse(data);
+            for (auto& jr : j) {
+                BotRule r;
+                std::string n = jr.value("name", "");
+                strncpy(r.name, n.c_str(), RULE_NAME_LEN - 1);
+                r.name[RULE_NAME_LEN - 1] = '\0';
+                r.enabled = jr.value("enabled", true);
+                r.cond_logic = jr.value("cond_logic", 0);
+
+                for (auto& jc : jr.value("conditions", nlohmann::json::array())) {
+                    BotRuleCond c;
+                    c.source = jc.value("source", 0);
+                    c.type   = jc.value("type", 0);
+                    c.op     = jc.value("op", 0);
+                    c.value  = jc.value("value", 0);
+                    c.extra  = jc.value("extra", 0);
+                    r.conditions.push_back(c);
+                }
+                for (auto& ja : jr.value("actions", nlohmann::json::array())) {
+                    BotRuleAction a;
+                    memset(&a, 0, sizeof(a));
+                    a.type     = ja.value("type", 0);
+                    a.target   = ja.value("target", 0);
+                    a.skill_id = ja.value("skill_id", 0);
+                    std::string msg = ja.value("message", "");
+                    strncpy(a.message, msg.c_str(), 63);
+                    a.message[63] = '\0';
+                    r.actions.push_back(a);
+                }
+                ctrl->rules.push_back(r);
+            }
+        } catch (const std::exception& e) {
+            ShowWarning("bot_ctrl: failed to parse rules for AID %d: %s\n", ctrl->master_aid, e.what());
+        }
+    } else {
+        Sql_FreeResult(mmysql_handle);
+    }
+    return true;
+}
+
+static bool bot_ctrl_save_rules(bot_ctrl* ctrl) {
+    nlohmann::json j = nlohmann::json::array();
+    for (auto& r : ctrl->rules) {
+        nlohmann::json jr;
+        jr["name"] = r.name;
+        jr["enabled"] = r.enabled;
+        jr["cond_logic"] = r.cond_logic;
+
+        nlohmann::json jconds = nlohmann::json::array();
+        for (auto& c : r.conditions) {
+            nlohmann::json jc;
+            jc["source"] = c.source;
+            jc["type"]   = c.type;
+            jc["op"]     = c.op;
+            jc["value"]  = c.value;
+            jc["extra"]  = c.extra;
+            jconds.push_back(jc);
+        }
+        jr["conditions"] = jconds;
+
+        nlohmann::json jacts = nlohmann::json::array();
+        for (auto& a : r.actions) {
+            nlohmann::json ja;
+            ja["type"]     = a.type;
+            ja["target"]   = a.target;
+            ja["skill_id"] = a.skill_id;
+            ja["message"]  = a.message;
+            jacts.push_back(ja);
+        }
+        jr["actions"] = jacts;
+        j.push_back(jr);
+    }
+
+    std::string json_str = j.dump();
+    size_t esc_len = json_str.size() * 2 + 1;
+    char* esc = (char*)aMalloc(esc_len);
+    Sql_EscapeStringLen(mmysql_handle, esc, json_str.data(), (int)json_str.size());
+
+    int rc = Sql_Query(mmysql_handle,
+        "REPLACE INTO %s (master_account_id, rules_json) VALUES (%d, '%s')",
+        bot_rules_table, ctrl->master_aid, esc);
+
+    aFree(esc);
+    return rc != SQL_ERROR;
 }
 
 /***********************************************************************
@@ -592,19 +627,54 @@ static bot_ctrl* bot_ctrl_bring_online(map_session_data* master, int32 bot_aid, 
     ctrl->master_aid = master->status.account_id;
     ctrl->bot_aid = bot_aid;
     ctrl->bot_cid = bot_cid;
-    ctrl->ai_mode = AI_SUPPORT;
+    ctrl->ai_mode = AI_FOLLOW;
     ctrl->job_group = bot_class_to_group(bot_sd->status.class_);
-    ctrl->config.hp_threshold = 80;
-    ctrl->config.sp_threshold = 20;
-    ctrl->config.auto_buff = true;
-    ctrl->config.auto_heal = true;
-    ctrl->config.auto_loot = true;
     ctrl->last_thinktime = gettick();
     ctrl->target_mob_id = 0;
     ctrl->last_action_tick = gettick();
 
+    bot_ctrl_load_rules(ctrl);
+
+    // Seed default rules if empty
+    if (ctrl->rules.empty()) {
+        BotRule r;
+
+        // Self Heal: bot HP% < 30 → Heal self
+        memset(&r, 0, sizeof(r));
+        strcpy(r.name, "Self Heal"); r.enabled = true; r.cond_logic = COND_AND;
+        r.conditions.push_back({SRC_BOT, COND_HP_PCT, OP_LT, 30, 0});
+        r.actions.push_back({ACT_USE_SKILL, 1, 28, ""});
+        ctrl->rules.push_back(r);
+
+        // Heal Master: master HP% < 80 → Heal master
+        memset(&r, 0, sizeof(r));
+        strcpy(r.name, "Heal Master"); r.enabled = true; r.cond_logic = COND_AND;
+        r.conditions.push_back({SRC_MASTER, COND_HP_PCT, OP_LT, 80, 0});
+        r.actions.push_back({ACT_USE_SKILL, 0, 28, ""});
+        ctrl->rules.push_back(r);
+
+        // Blessing: master missing SC_BLESSING → Blessing
+        memset(&r, 0, sizeof(r));
+        strcpy(r.name, "Blessing"); r.enabled = true; r.cond_logic = COND_AND;
+        r.conditions.push_back({SRC_MASTER, COND_SC_MISSING, OP_EQ, 0, 30});
+        r.actions.push_back({ACT_USE_SKILL, 0, 34, ""});
+        ctrl->rules.push_back(r);
+
+        // Inc AGI: master missing SC_INCREASEAGI → IncAGI
+        memset(&r, 0, sizeof(r));
+        strcpy(r.name, "Inc AGI"); r.enabled = true; r.cond_logic = COND_AND;
+        r.conditions.push_back({SRC_MASTER, COND_SC_MISSING, OP_EQ, 0, 32});
+        r.actions.push_back({ACT_USE_SKILL, 0, 29, ""});
+        ctrl->rules.push_back(r);
+
+        bot_ctrl_save_rules(ctrl);
+    }
+
     master->bot = ctrl;
-    bot_ctrl_db[master->status.char_id] = ctrl;
+    {
+        std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+        bot_ctrl_db[master->status.char_id] = ctrl;
+    }
 
     // 修正背包容量和负重，避免旧 Bot DB 数据为 0 导致无法给物品
     if (bot_sd->status.inventory_slots < 10)
@@ -641,7 +711,10 @@ bot_ctrl* bot_ctrl_create(map_session_data* master, int32 class_) {
             return existing;
         }
         // 过期的控制器（no bot_sd），清理掉
-        bot_ctrl_db.erase(master->status.char_id);
+        {
+            std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+            bot_ctrl_db.erase(master->status.char_id);
+        }
         aFree(existing);
     }
 
@@ -739,6 +812,7 @@ bot_ctrl* bot_ctrl_create(map_session_data* master, int32 class_) {
  ***********************************************************************/
 void bot_ctrl_destroy(bot_ctrl* ctrl) {
     if (!ctrl) return;
+    bot_ctrl_save_rules(ctrl);
     if (ctrl->bot_sd && ctrl->bot_sd->state.active) {
         save_bot_inventory(ctrl->bot_sd);
         chrif_save(ctrl->bot_sd, CSAVE_QUIT);
@@ -746,7 +820,10 @@ void bot_ctrl_destroy(bot_ctrl* ctrl) {
     }
     if (ctrl->master_sd)
         ctrl->master_sd->bot = nullptr;
-    bot_ctrl_db.erase(ctrl->master_cid);
+    {
+        std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+        bot_ctrl_db.erase(ctrl->master_cid);
+    }
     aFree(ctrl);
 }
 
@@ -755,11 +832,442 @@ void bot_ctrl_destroy(bot_ctrl* ctrl) {
  ***********************************************************************/
 void do_init_bot_ctrl(void) {
     add_timer_interval(gettick() + MIN_BOT_THINKTIME, bot_ctrl_ai_timer, 0, 0, MIN_BOT_THINKTIME);
+
+    // Ensure bot_rules table exists
+    Sql_Query(mmysql_handle,
+        "CREATE TABLE IF NOT EXISTS %s ("
+        "master_account_id INT NOT NULL PRIMARY KEY,"
+        "rules_json LONGTEXT,"
+        "updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        ") ENGINE=InnoDB", bot_rules_table);
 }
 void do_final_bot_ctrl(void) {
-    for (auto it = bot_ctrl_db.begin(); it != bot_ctrl_db.end(); ) {
-        bot_ctrl_destroy(it->second);
-        it = bot_ctrl_db.begin();
+    {
+        std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+        for (auto it = bot_ctrl_db.begin(); it != bot_ctrl_db.end(); ) {
+            bot_ctrl_destroy(it->second);
+            it = bot_ctrl_db.begin();
+        }
+        bot_ctrl_db.clear();
     }
-    bot_ctrl_db.clear();
+}
+
+/***********************************************************************
+ *  HTTP API - return JSON string for bot status
+ ***********************************************************************/
+static std::string bot_api_json_status(bot_ctrl* ctrl) {
+    auto bot = ctrl->bot_sd;
+    if (!bot) return "{\"code\":-1,\"msg\":\"no bot\"}";
+
+    auto& st = bot->status;
+    auto& bs = bot->battle_status;
+    const char* map_name = mapindex_id2name(bot->mapindex);
+
+    // Build skill list JSON
+    std::string skills_json;
+    skills_json += "[";
+    bool first = true;
+    for (int i = 0; i < MAX_SKILL; i++) {
+        if (st.skill[i].id != 0 && st.skill[i].lv > 0) {
+            if (!first) skills_json += ",";
+            first = false;
+            const char* sname = skill_get_name(st.skill[i].id);
+            if (!sname) sname = "";
+            // Escape backslash and quotes for JSON
+            std::string esc_name;
+            for (const char* p = sname; *p; p++) {
+                if (*p == '\\' || *p == '"') { esc_name += '\\'; }
+                esc_name += *p;
+            }
+            char sk[256];
+            snprintf(sk, sizeof(sk), "{\"id\":%u,\"lv\":%u,\"name\":\"%s\"}",
+                st.skill[i].id, st.skill[i].lv, esc_name.c_str());
+            skills_json += sk;
+        }
+    }
+    skills_json += "]";
+
+    t_exp next_base = pc_nextbaseexp(bot);
+    t_exp next_job  = pc_nextjobexp(bot);
+
+    char buf[4096];
+    snprintf(buf, sizeof(buf),
+        "{"
+        "\"code\":0,"
+        "\"msg\":\"ok\","
+        "\"data\":{"
+        "\"bot_name\":\"%s\","
+        "\"class\":%d,"
+        "\"base_level\":%d,"
+        "\"job_level\":%d,"
+        "\"base_exp\":%llu,"
+        "\"next_base_exp\":%llu,"
+        "\"job_exp\":%llu,"
+        "\"next_job_exp\":%llu,"
+        "\"hp\":%d,"
+        "\"max_hp\":%d,"
+        "\"sp\":%d,"
+        "\"max_sp\":%d,"
+        "\"str\":%d,\"agi\":%d,\"vit\":%d,\"int\":%d,\"dex\":%d,\"luk\":%d,"
+        "\"map\":\"%s\","
+        "\"x\":%d,\"y\":%d,"
+        "\"ai_mode\":%d,"
+        "\"target_mob_id\":%d,"
+        "\"zeny\":%d,"
+        "\"status_point\":%d,"
+        "\"skill_point\":%d,"
+        "\"skills\":%s"
+        "}"
+        "}",
+        st.name,
+        st.class_,
+        st.base_level,
+        st.job_level,
+        (unsigned long long)st.base_exp,
+        (unsigned long long)next_base,
+        (unsigned long long)st.job_exp,
+        (unsigned long long)next_job,
+        bs.hp,
+        bs.max_hp,
+        bs.sp,
+        bs.max_sp,
+        st.str, st.agi, st.vit, st.int_, st.dex, st.luk,
+        map_name ? map_name : "unknown",
+        bot->x, bot->y,
+        (int)ctrl->ai_mode,
+        ctrl->target_mob_id,
+        st.zeny,
+        st.status_point,
+        st.skill_point,
+        skills_json.c_str()
+    );
+    return std::string(buf);
+}
+
+/***********************************************************************
+ *  HTTP API handlers
+ ***********************************************************************/
+static httplib::Server* bot_api_svr = nullptr;
+static std::thread* bot_api_thread = nullptr;
+static bool bot_api_running = false;
+
+static void bot_api_handle_status(const httplib::Request& req, httplib::Response& res) {
+    auto aid = req.get_param_value("aid");
+    if (aid.empty()) {
+        res.set_content("{\"code\":-1,\"msg\":\"missing aid\"}", "application/json");
+        return;
+    }
+    int32 account_id = std::stoi(aid);
+
+    std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+    for (auto& it : bot_ctrl_db) {
+        if (it.second->master_aid == account_id) {
+            res.set_content(bot_api_json_status(it.second), "application/json");
+            return;
+        }
+    }
+    res.set_content("{\"code\":-1,\"msg\":\"bot not found\"}", "application/json");
+}
+
+static void bot_api_handle_cmd(const httplib::Request& req, httplib::Response& res) {
+    try {
+        auto body = nlohmann::json::parse(req.body);
+        int32 aid = body.value("aid", 0);
+        std::string cmd = body.value("cmd", "");
+        if (aid == 0 || cmd.empty()) {
+            res.set_content("{\"code\":-1,\"msg\":\"missing aid or cmd\"}", "application/json");
+            return;
+        }
+
+        bot_ctrl* ctrl = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(bot_ctrl_db_mutex);
+            for (auto& it : bot_ctrl_db) {
+                if (it.second->master_aid == aid) {
+                    ctrl = it.second;
+                    break;
+                }
+            }
+        }
+
+        if (!ctrl) {
+            res.set_content("{\"code\":-1,\"msg\":\"bot not found\"}", "application/json");
+            return;
+        }
+
+        auto bot = ctrl->bot_sd;
+        auto sd = ctrl->master_sd;
+        if (!bot || !sd) {
+            res.set_content("{\"code\":-1,\"msg\":\"bot session invalid\"}", "application/json");
+            return;
+        }
+
+        if (cmd == "ai_mode") {
+            int mode = body["params"].value("mode", -1);
+            if (mode >= 0 && mode < AI_MODE_MAX) {
+                ctrl->ai_mode = (bot_ai_mode)mode;
+                if (sd->fd)
+                    clif_displaymessage(sd->fd, "Bot mode changed via web!");
+                res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+            } else {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid mode\"}", "application/json");
+            }
+        } else if (cmd == "recall") {
+            if (bot->prev != nullptr)
+                unit_remove_map(bot, CLR_OUTSIGHT);
+            bot->mapindex = sd->mapindex;
+            bot->m = sd->m;
+            bot->x = sd->x + 1;
+            bot->y = sd->y;
+            map_addblock(bot);
+            clif_spawn(bot);
+            if (sd->fd)
+                clif_displaymessage(sd->fd, "Bot recalled via web!");
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "revive") {
+            if (bot->status.hp <= 0) {
+                status_revive(bot, 100, 100);
+                clif_spawn(bot);
+                if (sd->fd)
+                    clif_displaymessage(sd->fd, "Bot revived via web!");
+            }
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "destroy") {
+            if (sd->fd)
+                clif_displaymessage(sd->fd, "Bot destroyed via web!");
+            bot_ctrl_destroy(ctrl);
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "statusup") {
+            std::string stat = body["params"].value("stat", "");
+            int amount = body["params"].value("amount", 0);
+            int sp_type = -1;
+            if (stat == "str") sp_type = SP_STR;
+            else if (stat == "agi") sp_type = SP_AGI;
+            else if (stat == "vit") sp_type = SP_VIT;
+            else if (stat == "int") sp_type = SP_INT;
+            else if (stat == "dex") sp_type = SP_DEX;
+            else if (stat == "luk") sp_type = SP_LUK;
+            if (sp_type < 0 || amount <= 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid stat or amount\"}", "application/json");
+            } else if ((int32)bot->status.status_point < amount) {
+                res.set_content("{\"code\":-1,\"msg\":\"not enough status points\"}", "application/json");
+            } else if (!pc_statusup(bot, sp_type, amount)) {
+                res.set_content("{\"code\":-1,\"msg\":\"stat up failed (max reached?)\"}", "application/json");
+            } else {
+                if (sd->fd)
+                    clif_displaymessage(sd->fd, "Bot stats increased via web!");
+                res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+            }
+        } else if (cmd == "get_skills") {
+            nlohmann::json arr = nlohmann::json::array();
+            for (int i = 0; i < MAX_SKILL; i++) {
+                if (bot->status.skill[i].id != 0 && bot->status.skill[i].lv > 0) {
+                    nlohmann::json sk;
+                    sk["id"] = bot->status.skill[i].id;
+                    sk["lv"] = bot->status.skill[i].lv;
+                    arr.push_back(sk);
+                }
+            }
+            nlohmann::json j;
+            j["code"] = 0;
+            j["data"] = arr;
+            res.set_content(j.dump(), "application/json");
+        } else if (cmd == "learn_skill") {
+            uint16 skill_id = (uint16)body["params"].value("skill_id", 0);
+            if (skill_id == 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid skill_id\"}", "application/json");
+                return;
+            }
+            auto entry = skill_tree_db.get_skill_data(bot->status.class_, skill_id);
+            if (!entry) {
+                res.set_content("{\"code\":-1,\"msg\":\"your bot cannot learn this skill\"}", "application/json");
+                return;
+            }
+            uint8 cur_lv = pc_checkskill(bot, skill_id);
+            if (cur_lv >= entry->max_lv) {
+                res.set_content("{\"code\":-1,\"msg\":\"already max level\"}", "application/json");
+                return;
+            }
+            if (bot->status.base_level < (int32)entry->baselv || bot->status.job_level < (int32)entry->joblv) {
+                res.set_content("{\"code\":-1,\"msg\":\"level too low\"}", "application/json");
+                return;
+            }
+            // Check prerequisites
+            for (auto& prereq : entry->need) {
+                uint16 pre_id = prereq.first;
+                uint16 pre_lv = prereq.second;
+                if (pc_checkskill(bot, pre_id) < pre_lv) {
+                    char err[256];
+                    snprintf(err, sizeof(err), "need prerequisite skill %u level %u", pre_id, pre_lv);
+                    res.set_content((std::string("{\"code\":-1,\"msg\":\"") + err + "\"}").c_str(), "application/json");
+                    return;
+                }
+            }
+            if (bot->status.skill_point < 1) {
+                res.set_content("{\"code\":-1,\"msg\":\"not enough skill points\"}", "application/json");
+                return;
+            }
+            pc_skill(bot, skill_id, cur_lv + 1, ADDSKILL_PERMANENT);
+            bot->status.skill_point--;
+            if (sd->fd)
+                clif_displaymessage(sd->fd, "Bot skill learned via web!");
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "get_class_skills") {
+            // Build inheritance chain (base → current)
+            std::vector<int32> chain;
+            int32 cid = bot->status.class_;
+            while (cid >= 0) {
+                chain.push_back(cid);
+                auto tr = skill_tree_db.find(cid);
+                if (!tr || tr->inherit_job.empty()) break;
+                cid = tr->inherit_job[0];
+            }
+            std::reverse(chain.begin(), chain.end());
+
+            nlohmann::json result = nlohmann::json::array();
+            std::set<uint16> seen;
+
+            for (int32 job_id : chain) {
+                auto tr = skill_tree_db.find(job_id);
+                if (!tr) continue;
+
+                nlohmann::json group;
+                group["job_id"] = job_id;
+                group["job_name"] = job_name(job_id);
+                nlohmann::json skills = nlohmann::json::array();
+
+                // Collect skills sorted by id
+                std::vector<uint16> sorted_skids;
+                for (auto& it : tr->skills) {
+                    if (seen.count(it.first)) continue;
+                    sorted_skids.push_back(it.first);
+                }
+                std::sort(sorted_skids.begin(), sorted_skids.end());
+
+                for (uint16 skid : sorted_skids) {
+                    seen.insert(skid);
+                    auto& entry = tr->skills[skid];
+                    nlohmann::json sk;
+                    sk["id"] = skid;
+                    sk["name"] = skill_get_name(skid) ? skill_get_name(skid) : "";
+                    sk["max_lv"] = entry->max_lv;
+                    sk["baselv"] = entry->baselv;
+                    sk["joblv"]  = entry->joblv;
+                    sk["cur_lv"] = pc_checkskill(bot, skid);
+
+                    nlohmann::json prereqs = nlohmann::json::array();
+                    for (auto& [pid, plv] : entry->need) {
+                        prereqs.push_back({
+                            {"id", pid},
+                            {"lv", plv},
+                            {"cur_lv", pc_checkskill(bot, pid)}
+                        });
+                    }
+                    sk["prereqs"] = prereqs;
+                    skills.push_back(sk);
+                }
+                group["skills"] = skills;
+                result.push_back(group);
+            }
+
+            nlohmann::json jr;
+            jr["code"] = 0; jr["data"] = result;
+            res.set_content(jr.dump(), "application/json");
+        } else if (cmd == "get_rules") {
+            nlohmann::json arr = nlohmann::json::array();
+            for (auto& r : ctrl->rules) {
+                nlohmann::json jr;
+                jr["name"] = r.name;
+                jr["enabled"] = r.enabled;
+                jr["cond_logic"] = r.cond_logic;
+                nlohmann::json jc = nlohmann::json::array();
+                for (auto& c : r.conditions) {
+                    nlohmann::json jcc;
+                    jcc["source"] = c.source; jcc["type"] = c.type;
+                    jcc["op"] = c.op; jcc["value"] = c.value; jcc["extra"] = c.extra;
+                    jc.push_back(jcc);
+                }
+                jr["conditions"] = jc;
+                nlohmann::json ja = nlohmann::json::array();
+                for (auto& a : r.actions) {
+                    nlohmann::json jac;
+                    jac["type"] = a.type; jac["target"] = a.target;
+                    jac["skill_id"] = a.skill_id; jac["message"] = a.message;
+                    ja.push_back(jac);
+                }
+                jr["actions"] = ja;
+                arr.push_back(jr);
+            }
+            nlohmann::json jr;
+            jr["code"] = 0; jr["data"] = arr;
+            res.set_content(jr.dump(), "application/json");
+        } else if (cmd == "save_rules") {
+            auto& rules_json = body["params"]["rules"];
+            ctrl->rules.clear();
+            for (auto& jr : rules_json) {
+                BotRule r;
+                std::string n = jr.value("name", "");
+                strncpy(r.name, n.c_str(), RULE_NAME_LEN - 1);
+                r.name[RULE_NAME_LEN - 1] = '\0';
+                r.enabled = jr.value("enabled", true);
+                r.cond_logic = jr.value("cond_logic", 0);
+                for (auto& jc : jr.value("conditions", nlohmann::json::array())) {
+                    BotRuleCond c;
+                    c.source = jc.value("source", 0);
+                    c.type   = jc.value("type", 0);
+                    c.op     = jc.value("op", 0);
+                    c.value  = jc.value("value", 0);
+                    c.extra  = jc.value("extra", 0);
+                    r.conditions.push_back(c);
+                }
+                for (auto& ja : jr.value("actions", nlohmann::json::array())) {
+                    BotRuleAction a;
+                    memset(&a, 0, sizeof(a));
+                    a.type     = ja.value("type", 0);
+                    a.target   = ja.value("target", 0);
+                    a.skill_id = ja.value("skill_id", 0);
+                    std::string msg = ja.value("message", "");
+                    strncpy(a.message, msg.c_str(), 63);
+                    a.message[63] = '\0';
+                    r.actions.push_back(a);
+                }
+                ctrl->rules.push_back(r);
+            }
+            bot_ctrl_save_rules(ctrl);
+            if (sd->fd)
+                clif_displaymessage(sd->fd, "Bot rules saved via web!");
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else {
+            res.set_content("{\"code\":-1,\"msg\":\"unknown cmd\"}", "application/json");
+        }
+    } catch (const std::exception& e) {
+        res.set_content("{\"code\":-1,\"msg\":\"parse error:" + std::string(e.what()) + "\"}", "application/json");
+    }
+}
+
+/***********************************************************************
+ *  HTTP API init/final
+ ***********************************************************************/
+void do_init_bot_http_api(void) {
+    bot_api_svr = new httplib::Server();
+
+    bot_api_svr->Get("/api/bot/status", bot_api_handle_status);
+    bot_api_svr->Post("/api/bot/cmd", bot_api_handle_cmd);
+
+    bot_api_running = true;
+    bot_api_thread = new std::thread([] {
+        bot_api_svr->listen("127.0.0.1", BOT_API_DEFAULT_PORT);
+    });
+    bot_api_thread->detach();
+
+    ShowStatus("Bot HTTP API listening on 127.0.0.1:%d\n", BOT_API_DEFAULT_PORT);
+}
+
+void do_final_bot_http_api(void) {
+    if (bot_api_svr) {
+        bot_api_running = false;
+        bot_api_svr->stop();
+        delete bot_api_svr;
+        bot_api_svr = nullptr;
+    }
 }

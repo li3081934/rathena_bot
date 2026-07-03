@@ -20,10 +20,7 @@ Body:
       .@skt = bot_getinfo("skill_point");
       .@ai = bot_getinfo("ai_state");
       if (.@ai == 0) { .@mode$ = "Follow"; }
-      else if (.@ai == 1) { .@mode$ = "Support"; }
-      else if (.@ai == 2) { .@mode$ = "Standby"; }
-      else if (.@ai == 3) { .@mode$ = "Guard"; }
-      else { .@mode$ = "Assault"; }
+      else { .@mode$ = "Standby"; }
       mes "== Bot: Lv." + .@lv + "/" + .@jl + " ==";
       mes "HP:" + .@hp_v + "/" + .@mhp_v + "  SP:" + .@sp_v + "/" + .@msp_v;
       mes "Pts:" + .@spt + " SPt:" + .@skt + " Mode:" + .@mode$;
@@ -101,12 +98,9 @@ Body:
         close;
       case 4:
         next;
-        switch(select("Follow:Support:Standby:Guard:Assault:Cancel")) {
+        switch(select("Follow:Standby:Cancel")) {
         case 1: bot_ai_mode(0); mes "Follow."; break;
-        case 2: bot_ai_mode(1); mes "Support."; break;
-        case 3: bot_ai_mode(2); mes "Standby."; break;
-        case 4: bot_ai_mode(3); mes "Guard."; break;
-        case 5: bot_ai_mode(4); mes "Assault."; break;
+        case 2: bot_ai_mode(1); mes "Standby."; break;
         default: close;
         }
         close;
