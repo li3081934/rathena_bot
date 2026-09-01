@@ -21,10 +21,11 @@
 #define MAX_ACTIONS 8
 #define RULE_NAME_LEN 48
 
-// 2 behaviour modes (rest handled by rule engine)
+// 3 behaviour modes (rest handled by rule engine)
 enum bot_ai_mode : uint8 {
-    AI_FOLLOW,      // 0 - follow master when no rule fires
-    AI_STANDBY,     // 1 - stay put when no rule fires
+    AI_ACTIVE,      // 0 - execute rule engine, follow master when no rule fires
+    AI_PASSIVE,     // 1 - skip rule engine, only follow master
+    AI_STANDBY,     // 2 - stay put, do nothing
     AI_MODE_MAX
 };
 

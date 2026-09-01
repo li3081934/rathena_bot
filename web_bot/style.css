@@ -104,3 +104,18 @@ h2 { color:#ffd700; font-size:16px; margin-bottom:12px; }
 .cond-logic { display:flex; gap:6px; margin:4px 0; font-size:12px; color:#aaa; }
 .cond-logic label { cursor:pointer; }
 .cond-logic input { margin-right:2px; }
+
+/* Inventory tab */
+.inv-table { width:100%; border-collapse:collapse; font-size:13px; }
+.inv-table th { text-align:left; padding:6px 4px; border-bottom:2px solid #444; color:#aaa; font-size:12px; }
+.inv-table td { padding:6px 4px; border-bottom:1px solid #2a2a4a; }
+.inv-name { min-width:120px; }
+.inv-actions { white-space:nowrap; }
+.inv-actions button { padding:2px 8px; background:#0f3460; color:#fff; border:none; border-radius:3px; cursor:pointer; font-size:11px; margin:1px; }
+.inv-actions button:hover { background:#1a5276; }
+.inv-actions input[type=number] { padding:2px 4px; background:#16213e; color:#eee; border:1px solid #444; border-radius:3px; font-size:11px; width:50px; }
+.inv-equip { color:#33cc33; font-size:11px; font-weight:bold; }
+.give-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+.give-toolbar select { padding:6px 8px; background:#16213e; color:#eee; border:1px solid #444; border-radius:4px; font-size:13px; }
+.give-toolbar input[type=number] { padding:6px 8px; background:#16213e; color:#eee; border:1px solid #444; border-radius:4px; font-size:13px; width:70px; }
+.give-toolbar button.primary { background:#d4a017; color:#000; font-weight:bold; padding:6px 16px; border:none; border-radius:4px; cursor:pointer; }

@@ -16,6 +16,7 @@
 #include "battle.hpp"
 #include "chrif.hpp"
 #include "clif.hpp"
+#include "log.hpp"
 #include <common/mapindex.hpp>
 #include "map.hpp"
 #include "party.hpp"
@@ -389,17 +390,20 @@ static int32 bot_ctrl_ai_sub(bot_ctrl* ctrl, t_tick tick) {
     if (bot->ud.skilltimer != INVALID_TIMER)
         return 0;
 
-    // Standby mode: skip rules entirely, just stand idle
+    // Standby mode: skip everything, stand idle
     if (ctrl->ai_mode == AI_STANDBY)
         return 0;
 
-    // Try rules first
+    // Passive mode: skip rules, just follow master
+    if (ctrl->ai_mode == AI_PASSIVE) {
+        bot_follow_master(bot, sd);
+        return 0;
+    }
+
+    // Active mode: try rules first, fallback to follow
     if (bot_eval_rules(ctrl))
         return 0;
-
-    // No rule fired → fallback to mode default
-    if (ctrl->ai_mode == AI_FOLLOW)
-        bot_follow_master(bot, sd);
+    bot_follow_master(bot, sd);
     return 0;
 }
 
@@ -627,7 +631,7 @@ static bot_ctrl* bot_ctrl_bring_online(map_session_data* master, int32 bot_aid, 
     ctrl->master_aid = master->status.account_id;
     ctrl->bot_aid = bot_aid;
     ctrl->bot_cid = bot_cid;
-    ctrl->ai_mode = AI_FOLLOW;
+    ctrl->ai_mode = AI_ACTIVE;
     ctrl->job_group = bot_class_to_group(bot_sd->status.class_);
     ctrl->last_thinktime = gettick();
     ctrl->target_mob_id = 0;
@@ -1025,13 +1029,15 @@ static void bot_api_handle_cmd(const httplib::Request& req, httplib::Response& r
                 clif_displaymessage(sd->fd, "Bot recalled via web!");
             res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
         } else if (cmd == "revive") {
-            if (bot->status.hp <= 0) {
+            if (bot->battle_status.hp <= 0) {
                 status_revive(bot, 100, 100);
                 clif_spawn(bot);
                 if (sd->fd)
                     clif_displaymessage(sd->fd, "Bot revived via web!");
+                res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+            } else {
+                res.set_content("{\"code\":-1,\"msg\":\"bot is already alive\"}", "application/json");
             }
-            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
         } else if (cmd == "destroy") {
             if (sd->fd)
                 clif_displaymessage(sd->fd, "Bot destroyed via web!");
@@ -1237,6 +1243,153 @@ static void bot_api_handle_cmd(const httplib::Request& req, httplib::Response& r
             if (sd->fd)
                 clif_displaymessage(sd->fd, "Bot rules saved via web!");
             res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "get_inventory") {
+            nlohmann::json j;
+            j["code"] = 0;
+
+            auto buildItemList = [](map_session_data* who) -> nlohmann::json {
+                nlohmann::json arr = nlohmann::json::array();
+                for (int32 i = 0; i < MAX_INVENTORY; i++) {
+                    struct item* it = &who->inventory.u.items_inventory[i];
+                    if (it->nameid == 0) continue;
+                    auto id = itemdb_search(it->nameid);
+                    nlohmann::json item;
+                    item["index"] = i;
+                    item["nameid"] = (uint32)it->nameid;
+                    item["name"] = id ? id->ename : "Unknown";
+                    item["amount"] = (int16)it->amount;
+                    item["equip"] = (uint32)it->equip;
+                    item["type"] = id ? (int)id->type : 0;
+                    item["typename"] = id ? itemdb_typename(id->type) : "";
+                    item["is_equipped"] = it->equip != 0;
+                    item["identify"] = (uint8)it->identify;
+                    item["refine"] = (uint8)it->refine;
+                    arr.push_back(item);
+                }
+                return arr;
+            };
+
+            j["bot"] = buildItemList(bot);
+            j["master"] = buildItemList(sd);
+            res.set_content(j.dump(), "application/json");
+        } else if (cmd == "give_item") {
+            int32 idx = body["params"].value("index", -1);
+            int32 amount = body["params"].value("amount", 0);
+            if (idx < 0 || idx >= MAX_INVENTORY || amount <= 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid params\"}", "application/json");
+                return;
+            }
+            struct item* src = &sd->inventory.u.items_inventory[idx];
+            if (src->nameid == 0 || src->amount < amount) {
+                res.set_content("{\"code\":-1,\"msg\":\"not enough items\"}", "application/json");
+                return;
+            }
+            struct item tmp = *src;
+            tmp.amount = amount;
+            if (pc_delitem(sd, idx, amount, 0, 0, LOG_TYPE_OTHER) != 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"failed to remove from master\"}", "application/json");
+                return;
+            }
+            auto add_ret = pc_additem(bot, &tmp, amount, LOG_TYPE_OTHER);
+            if (add_ret != ADDITEM_SUCCESS) {
+                pc_additem(sd, &tmp, amount, LOG_TYPE_OTHER);
+                const char* err = "add item failed";
+                if (add_ret == ADDITEM_OVERWEIGHT) err = "bot overweight";
+                else if (add_ret == ADDITEM_OVERITEM) err = "bot inventory full";
+                res.set_content((std::string("{\"code\":-1,\"msg\":\"") + err + "\"}").c_str(), "application/json");
+                return;
+            }
+            save_bot_inventory(bot);
+            chrif_save(bot, CSAVE_QUIT);
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "take_item") {
+            int32 idx = body["params"].value("index", -1);
+            int32 amount = body["params"].value("amount", 0);
+            if (idx < 0 || idx >= MAX_INVENTORY || amount <= 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid params\"}", "application/json");
+                return;
+            }
+            struct item* src = &bot->inventory.u.items_inventory[idx];
+            if (src->nameid == 0 || src->amount < amount) {
+                res.set_content("{\"code\":-1,\"msg\":\"not enough items\"}", "application/json");
+                return;
+            }
+            if (src->equip != 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"unequip first\"}", "application/json");
+                return;
+            }
+            struct item tmp = *src;
+            tmp.amount = amount;
+            if (pc_delitem(bot, idx, amount, 0, 0, LOG_TYPE_OTHER) != 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"failed to remove from bot\"}", "application/json");
+                return;
+            }
+            auto add_ret = pc_additem(sd, &tmp, amount, LOG_TYPE_OTHER);
+            if (add_ret != ADDITEM_SUCCESS) {
+                pc_additem(bot, &tmp, amount, LOG_TYPE_OTHER);
+                const char* err = "add item failed";
+                if (add_ret == ADDITEM_OVERWEIGHT) err = "master overweight";
+                else if (add_ret == ADDITEM_OVERITEM) err = "master inventory full";
+                res.set_content((std::string("{\"code\":-1,\"msg\":\"") + err + "\"}").c_str(), "application/json");
+                return;
+            }
+            save_bot_inventory(bot);
+            chrif_save(bot, CSAVE_QUIT);
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "equip") {
+            int32 idx = body["params"].value("index", -1);
+            if (idx < 0 || idx >= MAX_INVENTORY) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid index\"}", "application/json");
+                return;
+            }
+            struct item* it = &bot->inventory.u.items_inventory[idx];
+            if (it->nameid == 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"item not found\"}", "application/json");
+                return;
+            }
+            if (!pc_equipitem(bot, (int16)idx, 0)) {
+                res.set_content("{\"code\":-1,\"msg\":\"cannot equip\"}", "application/json");
+                return;
+            }
+            save_bot_inventory(bot);
+            chrif_save(bot, CSAVE_QUIT);
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "unequip") {
+            int32 idx = body["params"].value("index", -1);
+            if (idx < 0 || idx >= MAX_INVENTORY) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid index\"}", "application/json");
+                return;
+            }
+            struct item* it = &bot->inventory.u.items_inventory[idx];
+            if (it->nameid == 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"item not found\"}", "application/json");
+                return;
+            }
+            if (!pc_unequipitem(bot, idx, 1)) {
+                res.set_content("{\"code\":-1,\"msg\":\"cannot unequip\"}", "application/json");
+                return;
+            }
+            save_bot_inventory(bot);
+            chrif_save(bot, CSAVE_QUIT);
+            res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+        } else if (cmd == "use_item") {
+            int32 idx = body["params"].value("index", -1);
+            if (idx < 0 || idx >= MAX_INVENTORY) {
+                res.set_content("{\"code\":-1,\"msg\":\"invalid index\"}", "application/json");
+                return;
+            }
+            struct item* it = &bot->inventory.u.items_inventory[idx];
+            if (it->nameid == 0) {
+                res.set_content("{\"code\":-1,\"msg\":\"item not found\"}", "application/json");
+                return;
+            }
+            if (pc_useitem(bot, idx) > 0) {
+                save_bot_inventory(bot);
+                chrif_save(bot, CSAVE_QUIT);
+                res.set_content("{\"code\":0,\"msg\":\"ok\"}", "application/json");
+            } else {
+                res.set_content("{\"code\":-1,\"msg\":\"cannot use item\"}", "application/json");
+            }
         } else {
             res.set_content("{\"code\":-1,\"msg\":\"unknown cmd\"}", "application/json");
         }

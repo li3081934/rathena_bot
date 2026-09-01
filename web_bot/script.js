@@ -1,4 +1,4 @@
-const MODE_NAMES = ['Follow', 'Standby'];
+const MODE_NAMES = ['Active', 'Passive', 'Standby'];
 const CLASS_NAMES = {
   0:'Novice',1:'Swordman',2:'Mage',3:'Archer',4:'Acolyte',5:'Merchant',6:'Thief'
 };
@@ -253,6 +253,7 @@ function renderAll(data){
   renderOverview(data);
   renderStats(data);
   renderSkills(data);
+  renderInventory();
   renderRules();
 }
 
@@ -265,7 +266,7 @@ async function refresh(){
 }
 
 // Tab mapping
-const TAB_MAP = {overview:'tab-overview',stats:'tab-stats',skills:'tab-skills',rules:'tab-rules'};
+const TAB_MAP = {overview:'tab-overview',stats:'tab-stats',skills:'tab-skills',inventory:'tab-inventory',rules:'tab-rules'};
 qsa('.tab').forEach(t=>{
   t.addEventListener('click',()=>{
     qsa('.tab').forEach(x=>x.classList.remove('active'));
@@ -273,6 +274,7 @@ qsa('.tab').forEach(t=>{
     t.classList.add('active');
     $(TAB_MAP[t.dataset.tab]||'tab-overview').classList.add('active');
     if (t.dataset.tab==='rules') renderRules();
+    if (t.dataset.tab==='inventory') renderInventory();
   });
 });
 
@@ -584,6 +586,113 @@ $('autoRef').addEventListener('change',()=>{
 });
 
 $('aid').addEventListener('keydown',e=>{ if(e.key==='Enter') refresh(); });
+
+// ─── Inventory ──────────────────────────────────────
+
+async function renderInventory() {
+  const el = $('inventory-bot');
+  el.innerHTML = '<p style="color:#888;">Loading...</p>';
+  const r = await sendCmd(currentAid, 'get_inventory');
+  if (!r || r.code !== 0) {
+    el.innerHTML = '<p style="color:#c44;">Failed to load inventory.</p>';
+    return;
+  }
+
+  const botItems = r.bot || [];
+  const masterItems = r.master || [];
+
+  // Render bot inventory
+  if (botItems.length === 0) {
+    el.innerHTML = '<p style="color:#888;">Bot inventory is empty.</p>';
+  } else {
+    let html = '<table class="inv-table"><tr><th>Item</th><th>Qty</th><th>Status</th><th>Actions</th></tr>';
+    botItems.forEach(item => {
+      const status = item.is_equipped ? '<span class="inv-equip">Equipped</span>' : '';
+      let actions = '';
+      if (item.is_equipped) {
+        actions += `<button class="inv-unequip" data-idx="${item.index}">Unequip</button> `;
+      } else if (item.type === 4 || item.type === 5) {
+        actions += `<button class="inv-equip" data-idx="${item.index}">Equip</button> `;
+      }
+      if (item.type === 0 || item.type === 2) {
+        actions += `<button class="inv-use" data-idx="${item.index}">Use</button> `;
+      }
+      actions += `<input type="number" class="take-amt" value="1" min="1" max="${item.amount}" style="width:50px;"> `;
+      actions += `<button class="inv-take" data-idx="${item.index}" data-max="${item.amount}">Take</button>`;
+      html += `<tr><td class="inv-name">${escHtml(item.name)}</td><td>${item.amount}</td><td>${status}</td><td class="inv-actions">${actions}</td></tr>`;
+    });
+    html += '</table>';
+    el.innerHTML = html;
+  }
+
+  // Populate master inventory for Give section
+  const sel = $('give-item-select');
+  sel.innerHTML = '<option value="">-- Select item --</option>';
+  if (masterItems.length === 0) {
+    sel.innerHTML += '<option value="" disabled>Master inventory is empty</option>';
+  } else {
+    masterItems.forEach(item => {
+      const opt = document.createElement('option');
+      opt.value = item.index;
+      opt.dataset.nameid = item.nameid;
+      opt.dataset.max = item.amount;
+      opt.textContent = `${item.name} (x${item.amount})`;
+      sel.appendChild(opt);
+    });
+  }
+}
+
+// Delegate event listeners for inventory actions
+document.getElementById('inventory-bot').addEventListener('click', async e => {
+  const aid = currentAid;
+  if (!aid) return;
+
+  if (e.target.classList.contains('inv-equip')) {
+    const idx = parseInt(e.target.dataset.idx);
+    const r = await sendCmd(aid, 'equip', {index: idx});
+    if (r && r.code === 0) { showMsg('Equipped!', 'info'); renderInventory(); }
+    else showMsg(r ? r.msg : 'Failed', 'error');
+  } else if (e.target.classList.contains('inv-unequip')) {
+    const idx = parseInt(e.target.dataset.idx);
+    const r = await sendCmd(aid, 'unequip', {index: idx});
+    if (r && r.code === 0) { showMsg('Unequipped!', 'info'); renderInventory(); }
+    else showMsg(r ? r.msg : 'Failed', 'error');
+  } else if (e.target.classList.contains('inv-use')) {
+    const idx = parseInt(e.target.dataset.idx);
+    const r = await sendCmd(aid, 'use_item', {index: idx});
+    if (r && r.code === 0) { showMsg('Item used!', 'info'); renderInventory(); }
+    else showMsg(r ? r.msg : 'Failed', 'error');
+  } else if (e.target.classList.contains('inv-take')) {
+    const idx = parseInt(e.target.dataset.idx);
+    const row = e.target.closest('tr');
+    const amtInput = row ? row.querySelector('.take-amt') : null;
+    const amount = amtInput ? parseInt(amtInput.value) || 1 : 1;
+    const r = await sendCmd(aid, 'take_item', {index: idx, amount: amount});
+    if (r && r.code === 0) { showMsg('Taken!', 'info'); renderInventory(); }
+    else showMsg(r ? r.msg : 'Failed', 'error');
+  }
+});
+
+$('give-item-btn').addEventListener('click', async () => {
+  const aid = currentAid;
+  if (!aid) return;
+  const sel = $('give-item-select');
+  const idx = parseInt(sel.value);
+  if (isNaN(idx)) { showMsg('Select an item', 'error'); return; }
+  const amount = parseInt($('give-item-amount').value) || 1;
+  const maxAmt = parseInt(sel.options[sel.selectedIndex].dataset.max) || 1;
+  if (amount > maxAmt) { showMsg(`Only ${maxAmt} available`, 'error'); return; }
+  const nameid = parseInt(sel.options[sel.selectedIndex].dataset.nameid) || 0;
+  const r = await sendCmd(aid, 'give_item', {index: idx, amount: amount, nameid: nameid});
+  if (r && r.code === 0) {
+    showMsg('Item given to bot!', 'info');
+    renderInventory();
+    $('give-item-select').value = '';
+    $('give-item-amount').value = 1;
+  } else {
+    showMsg(r ? r.msg : 'Failed', 'error');
+  }
+});
 
 // Load from URL
 const p=new URLSearchParams(window.location.search);

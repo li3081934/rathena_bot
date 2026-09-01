@@ -377,12 +377,10 @@ BUILDIN_FUNC(bot_getskilllv)
 BUILDIN_FUNC(bot_revive)
 {
     map_session_data* sd;
-    if (!script_rid2sd(sd) || !sd->bot || !sd->bot->bot_sd) {
-        clif_displaymessage(sd->fd, "No bot found!");
+    if (!script_rid2sd(sd) || !sd->bot || !sd->bot->bot_sd)
         return SCRIPT_CMD_SUCCESS;
-    }
     map_session_data* bot = sd->bot->bot_sd;
-    if (bot->status.hp <= 0) {
+    if (bot->battle_status.hp <= 0) {
         status_revive(bot, 100, 100);
         clif_spawn(bot);
         clif_displaymessage(sd->fd, "Bot revived!");

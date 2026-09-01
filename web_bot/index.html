@@ -21,6 +21,7 @@
       <button class="tab active" data-tab="overview">Overview</button>
       <button class="tab" data-tab="stats">Stats</button>
       <button class="tab" data-tab="skills">Skills</button>
+      <button class="tab" data-tab="inventory">Inventory</button>
       <button class="tab" data-tab="rules">Rules</button>
     </div>
 
@@ -41,8 +42,9 @@
         <tr><td>Mode</td><td id="mode"></td></tr>
       </table>
       <div class="actions">
-        <button class="mode" data-mode="0">Follow</button>
-        <button class="mode" data-mode="1">Standby</button>
+        <button class="mode" data-mode="0">Active</button>
+        <button class="mode" data-mode="1">Passive</button>
+        <button class="mode" data-mode="2">Standby</button>
         <button id="recall">Recall</button>
         <button id="revive">Revive</button>
         <button id="destroy" class="danger">Destroy</button>
@@ -59,6 +61,20 @@
     <div id="tab-skills" class="tab-content">
       <h2>Skill Points: <span id="sk_pts">0</span></h2>
       <div id="skill-list"></div>
+    </div>
+
+    <!-- Inventory -->
+    <div id="tab-inventory" class="tab-content">
+      <h2>Bot Inventory</h2>
+      <div id="inventory-bot" class="inv-section"></div>
+      <hr style="border-color:#333;margin:16px 0;">
+      <h2>Give Item to Bot</h2>
+      <div class="give-toolbar">
+        <select id="give-item-select" style="flex:1;min-width:200px;"><option value="">-- Select item --</option></select>
+        <input type="number" id="give-item-amount" value="1" min="1" max="999" style="width:70px;">
+        <button id="give-item-btn" class="primary">Give</button>
+      </div>
+      <div id="give-result"></div>
     </div>
 
     <!-- Rules -->
