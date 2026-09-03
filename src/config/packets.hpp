@@ -45,7 +45,7 @@
 	/// Comment to disable the official packet obfuscation support.
 	/// This requires PACKETVER 2011-08-17 or newer.
 	#ifndef PACKET_OBFUSCATION
-		#define PACKET_OBFUSCATION
+		//#define PACKET_OBFUSCATION   // disabled for roBrowser compatibility
 
 		// Define these inside src/custom/defines_pre.hpp or src/custom/defines_post.hpp
 		//#define PACKET_OBFUSCATION_KEY1 <key1>
@@ -53,7 +53,7 @@
 		//#define PACKET_OBFUSCATION_KEY3 <key3>
 
 		/// Comment this to disable warnings for missing client side encryption
-		#define PACKET_OBFUSCATION_WARN
+		//#define PACKET_OBFUSCATION_WARN
 	#endif
 #else
 	#if defined(PACKET_OBFUSCATION)
