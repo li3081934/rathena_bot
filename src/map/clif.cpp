@@ -30,6 +30,7 @@
 #include "battle.hpp"
 #include "battleground.hpp"
 #include "cashshop.hpp"
+#include "card_album.hpp"
 #include "channel.hpp"
 #include "chat.hpp"
 #include "chrif.hpp"

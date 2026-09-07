@@ -1155,3 +1155,17 @@ CREATE TABLE IF NOT EXISTS `vendings` (
   `autotrade` tinyint(4) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM;
+
+--
+-- Table structure for table `card_collection`
+--
+
+CREATE TABLE IF NOT EXISTS `card_collection` (
+  `char_id` INT(11) UNSIGNED NOT NULL,
+  `card_id` INT(11) UNSIGNED NOT NULL,
+  `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
+  `activated_at` DATETIME NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`char_id`, `card_id`),
+  KEY `char_active` (`char_id`, `active`)
+) ENGINE=InnoDB;

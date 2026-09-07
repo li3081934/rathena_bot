@@ -33,6 +33,10 @@ using namespace rathena;
 ComboDatabase itemdb_combo;
 ItemGroupDatabase itemdb_group;
 
+// Raw `Script` source texts by item id, filled in parseBodyNode below. Used
+// by the card collection album to re-apply a card's effect via bonus_script.
+static std::unordered_map<t_itemid, std::string> item_script_sources;
+
 struct s_roulette_db rd;
 
 static void itemdb_jobid2mapid(uint64 bclass[3], e_mapid jobmask, bool active);
@@ -1069,9 +1073,16 @@ uint64 ItemDatabase::parseBodyNode(const ryml::NodeRef& node) {
 		}
 
 		item->script = parse_script(script.c_str(), this->getCurrentFile().c_str(), this->getLineNumber(node["Script"]), SCRIPT_IGNORE_EXTERNAL_BRACKETS);
+
+		// Keep the raw source so the card collection album can re-apply it via bonus_script
+		if (!script.empty())
+			item_script_sources[nameid] = script;
+		else
+			item_script_sources.erase(nameid);
 	} else {
 		if (!exists) 
 			item->script = nullptr;
+		item_script_sources.erase(nameid);
 	}
 
 	if (this->nodeExists(node, "EquipScript")) {
@@ -3244,6 +3255,16 @@ struct item_data* itemdb_search(t_itemid nameid) {
 		id = item_db.find(ITEMID_DUMMY);
 	}
 	return id.get();
+}
+
+// Raw `Script` source texts by item id (see parseBodyNode). Used by the card
+// collection album to re-apply a card's effect through `bonus_script`.
+const char *itemdb_get_script_source(t_itemid nameid) {
+	auto it = item_script_sources.find(nameid);
+
+	if (it == item_script_sources.end())
+		return nullptr;
+	return it->second.c_str();
 }
 
 /** Checks if item is equip type or not
