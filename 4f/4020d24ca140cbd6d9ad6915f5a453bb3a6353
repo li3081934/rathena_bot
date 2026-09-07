@@ -1,0 +1,66 @@
+sql-files/upgrades/upgrade_20260904_card_collection.sql
+  s_0c0af683eab224::t_e483b45592b8e0 1-9
+sql-files/main.sql
+  s_0c0af683eab224::t_98942cda19cc06 1167
+  s_0c0af683eab224::t_3f64d36764c747 1158-1166,1168-1171
+src/map/clif_packetdb.hpp
+  s_0c0af683eab224::t_08494ba65846c3 2050-2052,2054
+  s_0c0af683eab224::t_35804cc0c8299d 2053
+  s_0c0af683eab224::t_860168c98c4c0a 2049
+src/map/card_album.cpp
+  s_0c0af683eab224::t_4221bd1eeacf83 42-49,53-87
+  s_0c0af683eab224::t_b6def0f43a4e2f 332,334,344-351,356,364-365,379-383,388
+  s_0c0af683eab224::t_c956744c3b3cae 411-419
+  s_0c0af683eab224::t_019d00b551181d 252-328
+  s_0c0af683eab224::t_349b715acff9b8 236-251
+  s_0c0af683eab224::t_fa4783e87e1ecc 336-339,363,366,371-375,377-378
+  s_0c0af683eab224::t_57262eed5775cf 1-4,7,18-20,22,24-41,50-52,88-99,102-103,105-106,108,110,112-113,115-116,119,121,159-165,175-178,180-197,199-206,228,329-331,335,340-343,360,362,367-370,376,389-410,420-429,435-466,468-478,520,522-524,541-542,544-549,551-556,558,568,570-572,574-575
+  s_0c0af683eab224::t_663e0f690548bd 352,359,361,384-387
+  s_0c0af683eab224::t_18b0dcada4d24e 353-355,357-358
+  s_0c0af683eab224::t_90473be237c180 467,479-519,521,525-540,543,550,557,559-567,569,573
+  s_0c0af683eab224::t_b0c431e74b0a4d 211-226,229-235
+  s_0c0af683eab224::t_edc63a3934ec99 100-101,104,107,109,111,114,117-118,120,122-158,166-174,179,198,207
+  s_0c0af683eab224::t_4b6026b05ece3d 430-434
+  s_0c0af683eab224::t_02d5d42781627d 21,23
+  s_0c0af683eab224::t_2b4c4444715e53 5-6
+  s_0c0af683eab224::t_f644cd0c070d21 8-10,15-17
+  s_0c0af683eab224::t_f0a7475e844baf 208-210
+  s_0c0af683eab224::t_063ddbe5e19461 227
+  s_0c0af683eab224::t_8bfd1b30eacb6c 333
+src/map/itemdb.hpp
+  s_0c0af683eab224::t_06875042142a81 3805-3811
+src/map/itemdb.cpp
+  s_0c0af683eab224::t_57d4609d0bea29 1076-1081,1085
+  s_0c0af683eab224::t_5ade2b6c252fb3 3260-3269
+  s_0c0af683eab224::t_77018ee76018ba 36-39
+src/map/card_album.hpp
+  s_0c0af683eab224::t_623229ae1fc983 13-15,18-22,29-30
+  s_0c0af683eab224::t_d956d14d04720d 24-28
+  s_0c0af683eab224::t_057bcb08431bab 16-17,47
+  s_0c0af683eab224::t_056754cca41a6a 1-10,12,31-46,48-56
+  s_0c0af683eab224::t_5e379d9fed381d 23
+  s_0c0af683eab224::t_b3a1dfdc618935 11
+src/map/clif.cpp
+  s_0c0af683eab224::t_9c88129f7e73b7 33
+src/map/pc.hpp
+  s_0c0af683eab224::t_1c62c321cafb6e 1725
+sql-files/upgrades/upgrade_20260904_card_album_multi.sql
+  s_0c0af683eab224::t_a9eaced1732a3a 1-2,4
+  s_0c0af683eab224::t_91d288c31ad13b 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4f4020d24ca140cbd6d9ad6915f5a453bb3a6353",
+  "prompts": {},
+  "sessions": {
+    "s_0c0af683eab224": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f9944a772ffe67b1Z40dds6nEl",
+        "model": "unknown"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
