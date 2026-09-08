@@ -1722,6 +1722,7 @@ void pc_show_version(map_session_data *sd);
 TIMER_FUNC(pc_bonus_script_timer);
 void pc_bonus_script(map_session_data *sd);
 struct s_bonus_script_entry *pc_bonus_script_add(map_session_data *sd, const char *script_str, t_tick dur, enum efst_type icon, uint16 flag, uint8 type);
+void pc_bonus_script_free_entry(map_session_data *sd, struct s_bonus_script_entry *entry);
 void pc_bonus_script_clear(map_session_data *sd, uint32 flag);
 
 void pc_cell_basilica(map_session_data *sd);
