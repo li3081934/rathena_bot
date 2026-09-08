@@ -1,0 +1,32 @@
+src/map/clif.cpp
+  s_174c91c30f05ff::t_35efcc61d73bc1 50
+src/map/mob_drop_info.cpp
+  s_174c91c30f05ff::t_1d81299e822a1f 1-20,22-51,53-119,121-159,161-166,168-175,177-183
+  s_174c91c30f05ff::t_cab8eae52af58a 52
+  s_174c91c30f05ff::t_5483e7a3e391e2 21
+  s_174c91c30f05ff::t_ddf364fe7ed070 120
+  s_174c91c30f05ff::t_cf8d332919b240 160
+  s_174c91c30f05ff::t_1c079c535b263d 167
+  s_174c91c30f05ff::t_e150e18aaa749d 176
+src/map/mob_drop_info.hpp
+  s_174c91c30f05ff::t_65a4c6013058c8 1-16,18-30
+  s_174c91c30f05ff::t_ecd2d31b0ed2c0 17
+src/map/clif_packetdb.hpp
+  s_174c91c30f05ff::t_90ef02b35d39aa 2055-2058
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "d986735a15465aaf15c584f118c5d65c48ceae7b",
+  "prompts": {},
+  "sessions": {
+    "s_174c91c30f05ff": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f80e34f3affeXKx9fBdDO32fLr",
+        "model": "unknown"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
