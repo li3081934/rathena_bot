@@ -2052,4 +2052,8 @@ parseable_packet( HEADER_CZ_CARD_ALBUM_SUBMIT, 4, clif_parse_card_album_submit, 
 parseable_packet( HEADER_CZ_CARD_ALBUM_ACTIVATE, 6, clif_parse_card_album_activate, 2 );
 parseable_packet( HEADER_CZ_CARD_ALBUM_DEACTIVATE, 6, clif_parse_card_album_deactivate, 2 );
 
+// Current-map monster + drop-rate viewer (custom packets, 0x0C45-0x0C48 are unused officially)
+parseable_packet( HEADER_CZ_REQ_MAPMOBS, 2, clif_parse_req_mapmobs, 0 );
+parseable_packet( HEADER_CZ_REQ_MOBDROPS, 4, clif_parse_req_mobdrops, 2 );
+
 #endif /* CLIF_PACKETDB_HPP */

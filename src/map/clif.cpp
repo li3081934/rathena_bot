@@ -47,6 +47,7 @@
 #include "map.hpp"
 #include "mercenary.hpp"
 #include "mob.hpp"
+#include "mob_drop_info.hpp"
 #include "npc.hpp"
 #include "party.hpp"
 #include "pc.hpp"
