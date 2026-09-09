@@ -1,0 +1,22 @@
+db/re/item_identify_randomopt.yml
+  h_04504ebe54ce64 17-19,38-42
+db/re/item_randomopt_group.yml
+  h_04504ebe54ce64 16332-16394
+src/map/itemdb.cpp
+  h_04504ebe54ce64 5015,5027-5031,5054,5062-5077,5080-5082
+src/map/itemdb.hpp
+  h_04504ebe54ce64 3424,3436-3439
+src/map/pc.cpp
+  h_04504ebe54ce64 5694
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "980467a38d170f4ea7254955265cbee60ca2f5cf",
+  "prompts": {},
+  "humans": {
+    "h_04504ebe54ce64": {
+      "author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
