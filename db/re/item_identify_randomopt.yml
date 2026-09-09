@@ -14,6 +14,9 @@
 # - Type                            Item type name (Weapon, Armor, ...).
 #   LevelMin                        Minimum WeaponLevel/ArmorLevel (inclusive).
 #   LevelMax                        Maximum WeaponLevel/ArmorLevel (inclusive).
+#   Location                        Optional: Accessory matches any accessory
+#                                   slot (left/right/both). Rows with Location
+#                                   win over plain Type+Level rows.
 #   Group                           Random option group from
 #                                   item_randomopt_group.yml (must use the
 #                                   CountChances count model).
@@ -32,3 +35,8 @@ Body:
     LevelMin: 2
     LevelMax: 2
     Group: WEAPON_LV2
+  - Type: Armor
+    LevelMin: 0
+    LevelMax: 99
+    Location: Accessory
+    Group: ACCESSORY

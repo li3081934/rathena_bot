@@ -5691,7 +5691,7 @@ uint16 pc_identify_roll_options(map_session_data *sd, int32 idx) {
 		level = idata->weapon_level;
 	else if (idata->type == IT_ARMOR)
 		level = idata->armor_level;
-	uint16 group_id = identify_randomopt_db.find_group(itemdb_typename(idata->type), level);
+	uint16 group_id = identify_randomopt_db.find_group(itemdb_typename(idata->type), level, idata->equip);
 	if (group_id == 0)
 		return 0;
 	std::shared_ptr<s_random_opt_group> group = random_option_group.find(group_id);
