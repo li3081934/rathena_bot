@@ -16237,10 +16237,6 @@ Body:
         MinValue: 1
         MaxValue: 5
         Chance: 5000
-      - Option: VAR_VITAMOUNT
-        MinValue: 1
-        MaxValue: 5
-        Chance: 5000
       - Option: VAR_INTAMOUNT
         MinValue: 1
         MaxValue: 5
@@ -16249,9 +16245,37 @@ Body:
         MinValue: 1
         MaxValue: 5
         Chance: 5000
-      - Option: VAR_LUKAMOUNT
+      - Option: VAR_ATKPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_MAGICATKPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_PLUSASPD
+        MinValue: 1
+        MaxValue: 1
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_ATTPOWER
+        MinValue: 1
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_HITSUCCESSVALUE
         MinValue: 1
         MaxValue: 5
+        Chance: 5000
+      - Option: VAR_ATTMPOWER
+        MinValue: 1
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_CRITICALSUCCESSVALUE
+        MinValue: 1
+        MaxValue: 3
         Chance: 5000
   - Id: 175
     Group: WEAPON_LV2
@@ -16265,10 +16289,6 @@ Body:
         MinValue: 6
         MaxValue: 10
         Chance: 5000
-      - Option: VAR_VITAMOUNT
-        MinValue: 6
-        MaxValue: 10
-        Chance: 5000
       - Option: VAR_INTAMOUNT
         MinValue: 6
         MaxValue: 10
@@ -16277,7 +16297,35 @@ Body:
         MinValue: 6
         MaxValue: 10
         Chance: 5000
-      - Option: VAR_LUKAMOUNT
-        MinValue: 6
+      - Option: VAR_ATKPERCENT
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_MAGICATKPERCENT
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_PLUSASPD
+        MinValue: 1
+        MaxValue: 1
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_ATTPOWER
+        MinValue: 5
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_HITSUCCESSVALUE
+        MinValue: 5
         MaxValue: 10
+        Chance: 5000
+      - Option: VAR_ATTMPOWER
+        MinValue: 5
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_CRITICALSUCCESSVALUE
+        MinValue: 3
+        MaxValue: 7
         Chance: 5000
