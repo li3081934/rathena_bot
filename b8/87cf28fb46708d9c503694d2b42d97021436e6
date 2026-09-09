@@ -1,0 +1,40 @@
+conf/battle/skill.conf
+  h_04504ebe54ce64 246-249
+db/item_identify_randomopt.yml
+  h_04504ebe54ce64 1-22
+db/re/item_identify_randomopt.yml
+  h_04504ebe54ce64 1-34
+db/re/item_randomopt_group.yml
+  h_04504ebe54ce64 16221-16283
+doc/randomopt_options.md
+  h_04504ebe54ce64 1-153
+src/map/battle.cpp
+  h_04504ebe54ce64 8560
+src/map/battle.hpp
+  h_04504ebe54ce64 432
+src/map/clif.cpp
+  h_04504ebe54ce64 23739
+src/map/clif.hpp
+  h_04504ebe54ce64 907
+src/map/itemdb.cpp
+  h_04504ebe54ce64 4755-4850,4942-4954,5008-5066,5105,5202
+src/map/itemdb.hpp
+  h_04504ebe54ce64 3374-3376,3380-3382,3419-3440
+src/map/pc.cpp
+  h_04504ebe54ce64 5665-5702,5712-5715
+src/map/pc.hpp
+  h_04504ebe54ce64 1500-1503
+src/map/skill.cpp
+  h_04504ebe54ce64 10586-10589,10593-10597
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b887cf28fb46708d9c503694d2b42d97021436e6",
+  "prompts": {},
+  "humans": {
+    "h_04504ebe54ce64": {
+      "author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
