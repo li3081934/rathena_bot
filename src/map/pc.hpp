@@ -1497,6 +1497,10 @@ int32 pc_insert_card(map_session_data *sd,int32 idx_card,int32 idx_equip);
 
 int32 pc_identifyall(map_session_data *sd, bool identify_item);
 
+/// Identify-time random option attach (custom, see item_identify_randomopt.yml).
+/// Rolls options for equipment without any. Returns options added.
+uint16 pc_identify_roll_options(map_session_data *sd, int32 idx);
+
 bool pc_steal_item(map_session_data *sd,block_list *bl, uint16 skill_lv);
 
 int32 pc_modifybuyvalue( const map_session_data*, int32 orig_value );

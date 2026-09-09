@@ -1,0 +1,22 @@
+# This file is a part of rAthena.
+#   Copyright(C) 2026 rAthena Development Team
+#   https://rathena.org - https://github.com/rathena
+#
+###########################################################################
+# Identify Random Option Default Mapping Database
+###########################################################################
+#
+# Maps (item type, weapon/armor level) to a random option group applied
+# when identifying equipment without options. See db/re/ for entries.
+#
+###########################################################################
+
+Header:
+  Type: ITEM_IDENTIFY_RANDOMOPT_DB
+  Version: 1
+
+Footer:
+  Imports:
+  - Path: db/re/item_identify_randomopt.yml
+    Mode: Renewal
+  - Path: db/import/item_identify_randomopt.yml

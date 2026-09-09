@@ -3371,9 +3371,15 @@ struct s_random_opt_group {
 	std::map<uint16, std::vector<std::shared_ptr<s_random_opt_group_entry>>> slots;
 	uint16 max_random;
 	std::vector<std::shared_ptr<s_random_opt_group_entry>> random_options;
+	/// Count distribution for counted rolls: relative weights for
+	/// 0..N options. Empty = legacy Slots/MaxRandom behavior.
+	std::vector<uint32> count_chances;
 
 public:
 	void apply( struct item& item );
+	/// Top-up fill for identify: keeps existing options, adds up to what
+	/// a fresh counted roll would grant. Returns options added.
+	uint16 apply_counted( struct item& item );
 };
 
 class RandomOptionDatabase : public TypesafeYamlDatabase<uint16, s_random_opt_data> {
@@ -3409,6 +3415,28 @@ public:
 };
 
 extern RandomOptionGroupDatabase random_option_group;
+
+/// Identify-time default random option mapping entry.
+//  Maps (item type name, weapon/armor level range) to a random option group.
+struct s_identify_randomopt_entry {
+	std::string type;
+	uint16 level_min, level_max;
+	uint16 group_id; // resolved random option group id (0 = unresolved)
+};
+
+class ItemIdentifyRandomoptDatabase : public TypesafeYamlDatabase<uint16, s_identify_randomopt_entry> {
+public:
+	ItemIdentifyRandomoptDatabase() : TypesafeYamlDatabase("ITEM_IDENTIFY_RANDOMOPT_DB", 1) {
+
+	}
+
+	const std::string getDefaultLocation() override;
+	uint64 parseBodyNode(const ryml::NodeRef& node) override;
+	/// Find group id for (type name, level). Returns 0 when no row matches.
+	uint16 find_group(const std::string& type, uint16 level);
+};
+
+extern ItemIdentifyRandomoptDatabase identify_randomopt_db;
 
 /// Struct of item group entry
 struct s_item_group_entry

@@ -904,6 +904,7 @@ void clif_scriptinputstr( map_session_data& sd, uint32 npcid );
 void clif_cutin( const map_session_data& sd, const char* image, int32 type );
 void clif_viewpoint( const map_session_data& sd, uint32 npc_id, int32 type, uint16 x, uint16 y, int32 id, uint32 color );
 void clif_additem( const map_session_data* sd, int32 n, int32 amount, unsigned char fail ); // self
+void clif_item_preview( map_session_data *sd, int16 index ); // self (identify option popup)
 void clif_dropitem( const map_session_data& sd, int32 index, int32 amount );
 void clif_delitem( const map_session_data& sd, int32 index, int32 amount, int16 reason );
 void clif_update_hp( const map_session_data& sd );

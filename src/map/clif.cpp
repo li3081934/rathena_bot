@@ -23736,7 +23736,7 @@ void clif_laphine_upgrade_result( map_session_data *sd, bool failed ){
 #endif
 }
 
-static void clif_item_preview( map_session_data *sd, int16 index ){
+void clif_item_preview( map_session_data *sd, int16 index ){
 #if PACKETVER_MAIN_NUM >= 20170726 || PACKETVER_RE_NUM >= 20170621 || defined(PACKETVER_ZERO)
 	nullpo_retv( sd );
 
