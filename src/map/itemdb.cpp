@@ -4753,6 +4753,102 @@ void s_random_opt_group::apply( struct item& item ){
 }
 
 /**
+ * Counted roll: draw a target total K from CountChances (relative weights
+ * for 0..N), then top up empty slots to K without touching existing options.
+ * Returns options added. Groups without CountChances always return 0 here
+ * (legacy Slots/MaxRandom behavior lives in apply()).
+ */
+uint16 s_random_opt_group::apply_counted( struct item& item ){
+	if( this->count_chances.empty() ){
+		return 0;
+	}
+
+	// Count existing options
+	uint16 existing = 0;
+	uint16 empty = 0;
+	for( size_t i = 0; i < MAX_ITEM_RDM_OPT; i++ ){
+		if( item.option[i].id != 0 ){
+			existing++;
+		}else{
+			empty++;
+		}
+	}
+
+	// Roll target total K
+	uint32 total = 0;
+	for( uint32 w : this->count_chances ){
+		total += w;
+	}
+	if( total == 0 ){
+		return 0;
+	}
+	uint16 K = 0;
+	uint32 r = (uint32)rnd() % total;
+	for( size_t i = 0; i < this->count_chances.size() && i <= MAX_ITEM_RDM_OPT; i++ ){
+		if( r < this->count_chances[i] ){
+			K = (uint16)i;
+			break;
+		}
+		r -= this->count_chances[i];
+	}
+
+	uint16 need = ( K > existing ) ? ( K - existing ) : 0;
+	if( need == 0 || empty == 0 ){
+		return 0;
+	}
+	if( need > empty ){
+		need = empty;
+	}
+
+	// Candidate pool: Slots flattened + Random (Chance = relative pick weight)
+	std::vector<std::shared_ptr<s_random_opt_group_entry>> pool;
+	for( auto &kv : this->slots ){
+		for( auto &e : kv.second ){
+			pool.push_back( e );
+		}
+	}
+	for( auto &e : this->random_options ){
+		pool.push_back( e );
+	}
+	if( pool.empty() ){
+		return 0;
+	}
+
+	auto present = [&]( uint16 id ) -> bool {
+		for( size_t i = 0; i < MAX_ITEM_RDM_OPT; i++ ){
+			if( item.option[i].id == id ){
+				return true;
+			}
+		}
+		return false;
+	};
+
+	// Fill empty slots in index order
+	uint16 added = 0;
+	for( size_t i = 0; i < MAX_ITEM_RDM_OPT && added < need; i++ ){
+		if( item.option[i].id != 0 ){
+			continue;
+		}
+		for( size_t t = 0, maxtries = pool.size() * 3 + 1; t < maxtries && added < need; t++ ){
+			std::shared_ptr<s_random_opt_group_entry> option = util::vector_random( pool );
+
+			if( present( option->id ) ){
+				continue;
+			}
+			if( rnd_chance<uint16>( option->chance, 10000 ) ){
+				item.option[i].id = option->id;
+				item.option[i].value = rnd_value( option->min_value, option->max_value );
+				item.option[i].param = option->param;
+				added++;
+				break;
+			}
+		}
+	}
+
+	return added;
+}
+
+/**
  * Reads and parses an entry from the item_randomopt_group.
  * @param node: YAML node containing the entry.
  * @return count of successfully parsed rows
@@ -4843,6 +4939,19 @@ uint64 RandomOptionGroupDatabase::parseBodyNode(const ryml::NodeRef& node) {
 			randopt->max_random = 0;
 	}
 
+	if (this->nodeExists(node, "CountChances")) {
+		randopt->count_chances.clear();
+
+		const auto& chancesNode = node["CountChances"];
+		for (const auto& chanceNode : chancesNode) {
+			uint32 w = 0;
+			c4::from_chars(chanceNode.val(), &w);
+			if (randopt->count_chances.size() > MAX_ITEM_RDM_OPT)
+				break; // K only meaningful for 0..MAX_ITEM_RDM_OPT
+			randopt->count_chances.push_back(w);
+		}
+	}
+
 	if (this->nodeExists(node, "Random")) {
 		randopt->random_options.clear();
 
@@ -4896,6 +5005,65 @@ bool RandomOptionGroupDatabase::option_get_id(std::string name, uint16 &id) {
 	return false;
 }
 
+const std::string ItemIdentifyRandomoptDatabase::getDefaultLocation(){
+	return std::string( db_path ) + "/item_identify_randomopt.yml";
+}
+
+uint64 ItemIdentifyRandomoptDatabase::parseBodyNode( const ryml::NodeRef& node ){
+	std::string type;
+	uint16 level_min = 0, level_max = 0;
+	std::string group;
+
+	if( !this->asString( node, "Type", type ) ){
+		return 0;
+	}
+	if( !this->asUInt16( node, "LevelMin", level_min ) ){
+		return 0;
+	}
+	if( !this->asUInt16( node, "LevelMax", level_max ) ){
+		return 0;
+	}
+	if( !this->asString( node, "Group", group ) ){
+		return 0;
+	}
+
+	// Resolve group name now so typos fail fast at load.
+	// NOTE: requires random_option_group loaded first (see itemdb_read order).
+	uint16 group_id = 0;
+	for( const auto &opt : random_option_group ){
+		if( opt.second->name.compare( group ) == 0 ){
+			group_id = opt.first;
+			break;
+		}
+	}
+	if( group_id == 0 ){
+		this->invalidWarning( node["Group"], "Unknown random option group \"%s\".\n", group.c_str() );
+		return 0;
+	}
+
+	std::shared_ptr<s_identify_randomopt_entry> entry = std::make_shared<s_identify_randomopt_entry>();
+	entry->type = type;
+	entry->level_min = level_min;
+	entry->level_max = level_max;
+	entry->group_id = group_id;
+
+	this->put( (uint16)this->size(), entry );
+
+	return 1;
+}
+
+uint16 ItemIdentifyRandomoptDatabase::find_group(const std::string& type, uint16 level) {
+	for( const auto &kv : *this ){
+		const auto &e = kv.second;
+		if( e->type.compare( type ) == 0 && level >= e->level_min && level <= e->level_max ){
+			return e->group_id;
+		}
+	}
+	return 0;
+}
+
+ItemIdentifyRandomoptDatabase identify_randomopt_db;
+
 /**
 * Read all item-related databases
 */
@@ -4934,6 +5102,7 @@ static void itemdb_read(void) {
 
 	random_option_db.load();
 	random_option_group.load();
+	identify_randomopt_db.load();
 	itemdb_group.load();
 	itemdb_combo.load();
 	laphine_synthesis_db.load();
@@ -5030,6 +5199,7 @@ void do_final_itemdb(void) {
 	itemdb_group.clear();
 	random_option_db.clear();
 	random_option_group.clear();
+	identify_randomopt_db.clear();
 	laphine_synthesis_db.clear();
 	laphine_upgrade_db.clear();
 	item_reform_db.clear();

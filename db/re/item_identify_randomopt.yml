@@ -1,0 +1,34 @@
+# This file is a part of rAthena.
+#   Copyright(C) 2026 rAthena Development Team
+#   https://rathena.org - https://github.com/rathena
+#
+###########################################################################
+# Identify Random Option Default Mapping Database
+###########################################################################
+#
+# Applies random options when an item WITHOUT options is identified
+# (Magnifier, one-click identify, @identifyall, scripts).
+# Items that already have options are never re-rolled.
+#
+###########################################################################
+# - Type                            Item type name (Weapon, Armor, ...).
+#   LevelMin                        Minimum WeaponLevel/ArmorLevel (inclusive).
+#   LevelMax                        Maximum WeaponLevel/ArmorLevel (inclusive).
+#   Group                           Random option group from
+#                                   item_randomopt_group.yml (must use the
+#                                   CountChances count model).
+###########################################################################
+
+Header:
+  Type: ITEM_IDENTIFY_RANDOMOPT_DB
+  Version: 1
+
+Body:
+  - Type: Weapon
+    LevelMin: 1
+    LevelMax: 1
+    Group: WEAPON_LV1
+  - Type: Weapon
+    LevelMin: 2
+    LevelMax: 2
+    Group: WEAPON_LV2

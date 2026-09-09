@@ -8557,6 +8557,7 @@ static const struct _battle_data {
 	{ "pk_min_level",                       &battle_config.pk_min_level,                    55,     1,      INT_MAX,        },
 	{ "skill_steal_max_tries",              &battle_config.skill_steal_max_tries,           0,      0,      UCHAR_MAX,      },
 	{ "skill_steal_random_options",         &battle_config.skill_steal_random_options,      0,      0,      1,              },
+	{ "identify_randomopt",                 &battle_config.identify_randomopt,              1,      0,      1,              },
 	{ "motd_type",                          &battle_config.motd_type,                       0,      0,      1,              },
 	{ "exp_calc_type",                      &battle_config.exp_calc_type,                   0,      0,      2,              },
 	{ "exp_bonus_attacker",                 &battle_config.exp_bonus_attacker,              25,     0,      INT_MAX,        },

@@ -429,6 +429,7 @@ struct Battle_Config
 	int32 pk_min_level; // [celest]
 	int32 skill_steal_max_tries; //max steal skill tries on a mob. if 0, then w/o limit [Lupus]
 	int32 skill_steal_random_options;
+	int32 identify_randomopt; // Attach random options when identifying equipment without options
 	int32 motd_type; // [celest]
 	int32 exp_calc_type;
 	int32 exp_bonus_attacker;

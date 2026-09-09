@@ -10583,9 +10583,18 @@ void skill_identify(map_session_data *sd, int32 idx)
 			sd->inventory.u.items_inventory[idx].identify = 1;
 		}
 	}
+	uint16 identify_rolled = 0;
+	if(!failure) {
+		identify_rolled = pc_identify_roll_options(sd, idx);
+	}
 	clif_item_identified( *sd, idx, failure );
 	
 	if(!failure) {
+		if (identify_rolled > 0) {
+			clif_delitem(*sd, idx, 1, 0);
+			clif_additem(sd, idx, 1, 0);
+			clif_item_preview(sd, (int16)idx);
+		}
 		pc_setreg(sd, add_str("@identify_idx"), idx);
 		npc_script_event( *sd, NPCE_IDENTIFY );
 	}

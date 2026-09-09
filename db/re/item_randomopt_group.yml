@@ -16218,3 +16218,66 @@ Body:
             MinValue: 1
             MaxValue: 5
             Chance: 200
+  # ---------------------------------------------------------------------------
+  # Identify-time pools: weapon level tiers, basic six stats only.
+  # Count is governed by CountChances (relative weights for 0-4 options),
+  # NOT by Slots/MaxRandom. Option pool = Random section.
+  #   Chance = relative pick weight within the pool.
+  #   Delete a line = that stat never appears. Min/Max = value range.
+  # ---------------------------------------------------------------------------
+  - Id: 174
+    Group: WEAPON_LV1
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_STRAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_VITAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_INTAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_LUKAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+  - Id: 175
+    Group: WEAPON_LV2
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_STRAMOUNT
+        MinValue: 6
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 6
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_VITAMOUNT
+        MinValue: 6
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_INTAMOUNT
+        MinValue: 6
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 6
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_LUKAMOUNT
+        MinValue: 6
+        MaxValue: 10
+        Chance: 5000

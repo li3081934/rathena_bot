@@ -5662,6 +5662,44 @@ int32 pc_insert_card(map_session_data* sd, int32 idx_card, int32 idx_equip)
  * @param identify_item: Whether or not to identify any unidentified items
  * @return Unidentified items count
  */
+/**
+ * Identify-time random option attach (custom).
+ * Rolls options from item_identify_randomopt.yml mapping for equipment
+ * without any options. Never overwrites existing options.
+ * Returns options added (0 = none).
+ */
+uint16 pc_identify_roll_options(map_session_data *sd, int32 idx) {
+	if (!battle_config.identify_randomopt)
+		return 0;
+	if (sd == nullptr || idx < 0 || idx >= MAX_INVENTORY)
+		return 0;
+	struct item *it = &sd->inventory.u.items_inventory[idx];
+	if (it->nameid == 0)
+		return 0;
+	// Never touch items that already have options.
+	for (size_t i = 0; i < MAX_ITEM_RDM_OPT; i++) {
+		if (it->option[i].id != 0)
+			return 0;
+	}
+	std::shared_ptr<item_data> idata = item_db.find(it->nameid);
+	if (idata == nullptr)
+		return 0;
+	if (idata->type != IT_WEAPON && idata->type != IT_ARMOR && idata->type != IT_SHADOWGEAR)
+		return 0;
+	uint16 level = 0;
+	if (idata->type == IT_WEAPON)
+		level = idata->weapon_level;
+	else if (idata->type == IT_ARMOR)
+		level = idata->armor_level;
+	uint16 group_id = identify_randomopt_db.find_group(itemdb_typename(idata->type), level);
+	if (group_id == 0)
+		return 0;
+	std::shared_ptr<s_random_opt_group> group = random_option_group.find(group_id);
+	if (group == nullptr)
+		return 0;
+	return group->apply_counted(*it);
+}
+
 int32 pc_identifyall(map_session_data *sd, bool identify_item)
 {
 	int32 unidentified_count = 0;
@@ -5671,6 +5709,10 @@ int32 pc_identifyall(map_session_data *sd, bool identify_item)
 			if (identify_item == true) {
 				sd->inventory.u.items_inventory[i].identify = 1;
 				clif_item_identified( *sd, i, false );
+				if (pc_identify_roll_options(sd, i) > 0) {
+					clif_delitem(*sd, i, 1, 0);
+					clif_additem(sd, i, 1, 0);
+				}
 			}
 			unidentified_count++;
 		}
