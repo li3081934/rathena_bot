@@ -5012,6 +5012,7 @@ const std::string ItemIdentifyRandomoptDatabase::getDefaultLocation(){
 uint64 ItemIdentifyRandomoptDatabase::parseBodyNode( const ryml::NodeRef& node ){
 	std::string type;
 	uint16 level_min = 0, level_max = 0;
+	std::string location;
 	std::string group;
 
 	if( !this->asString( node, "Type", type ) ){
@@ -5022,6 +5023,11 @@ uint64 ItemIdentifyRandomoptDatabase::parseBodyNode( const ryml::NodeRef& node )
 	}
 	if( !this->asUInt16( node, "LevelMax", level_max ) ){
 		return 0;
+	}
+	if( this->nodeExists( node, "Location" ) ){
+		if( !this->asString( node, "Location", location ) ){
+			return 0;
+		}
 	}
 	if( !this->asString( node, "Group", group ) ){
 		return 0;
@@ -5045,6 +5051,7 @@ uint64 ItemIdentifyRandomoptDatabase::parseBodyNode( const ryml::NodeRef& node )
 	entry->type = type;
 	entry->level_min = level_min;
 	entry->level_max = level_max;
+	entry->location = location;
 	entry->group_id = group_id;
 
 	this->put( (uint16)this->size(), entry );
@@ -5052,9 +5059,27 @@ uint64 ItemIdentifyRandomoptDatabase::parseBodyNode( const ryml::NodeRef& node )
 	return 1;
 }
 
-uint16 ItemIdentifyRandomoptDatabase::find_group(const std::string& type, uint16 level) {
+uint16 ItemIdentifyRandomoptDatabase::find_group(const std::string& type, uint16 level, uint32 equip) {
+	const bool is_accessory = (equip & (EQP_ACC_R | EQP_ACC_L)) != 0;
+	// Pass 1: rows with Location win over plain Type+Level rows.
 	for( const auto &kv : *this ){
 		const auto &e = kv.second;
+		if( e->location.empty() ){
+			continue;
+		}
+		if( e->type.compare( type ) != 0 || level < e->level_min || level > e->level_max ){
+			continue;
+		}
+		if( e->location.compare( "Accessory" ) == 0 && is_accessory ){
+			return e->group_id;
+		}
+	}
+	// Pass 2: plain Type+Level rows.
+	for( const auto &kv : *this ){
+		const auto &e = kv.second;
+		if( !e->location.empty() ){
+			continue;
+		}
 		if( e->type.compare( type ) == 0 && level >= e->level_min && level <= e->level_max ){
 			return e->group_id;
 		}

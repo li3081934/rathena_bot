@@ -3421,6 +3421,7 @@ extern RandomOptionGroupDatabase random_option_group;
 struct s_identify_randomopt_entry {
 	std::string type;
 	uint16 level_min, level_max;
+	std::string location; // optional: "Accessory" matches any accessory slot
 	uint16 group_id; // resolved random option group id (0 = unresolved)
 };
 
@@ -3432,8 +3433,10 @@ public:
 
 	const std::string getDefaultLocation() override;
 	uint64 parseBodyNode(const ryml::NodeRef& node) override;
-	/// Find group id for (type name, level). Returns 0 when no row matches.
-	uint16 find_group(const std::string& type, uint16 level);
+	/// Find group id for (type name, level, equip mask).
+	/// Rows with Location win over plain Type+Level rows.
+	/// Returns 0 when no row matches.
+	uint16 find_group(const std::string& type, uint16 level, uint32 equip);
 };
 
 extern ItemIdentifyRandomoptDatabase identify_randomopt_db;
