@@ -1,0 +1,48 @@
+src/map/skill.cpp
+  s_254918e6ba3c81::t_2dcaa3c6e18ef9 184,186
+  s_254918e6ba3c81::t_0c6730a074e1f2 185,187-192
+src/map/map.hpp
+  s_254918e6ba3c81::t_911284c6d9b563 591-592
+src/map/battle.cpp
+  s_254918e6ba3c81::t_a8717017ba7f4a 5286
+  s_254918e6ba3c81::t_a4af3adbc31e99 5829
+  s_254918e6ba3c81::t_3cb79729797349 6312
+src/map/status.cpp
+  s_254918e6ba3c81::t_a3e3c586468f43 3851
+src/map/script.cpp
+  s_254918e6ba3c81::t_bbdfa033e588e9 10049
+  s_254918e6ba3c81::t_e266edb7cd939a 10048
+  s_254918e6ba3c81::t_d4fb0b3a727d82 10050
+src/map/pc.cpp
+  s_254918e6ba3c81::t_196fb697602834 4729-4738,9672-9673
+  s_254918e6ba3c81::t_8060c6a183ce90 9661-9669
+  s_254918e6ba3c81::t_6e97156ae4a39b 9670-9671
+  s_254918e6ba3c81::t_7060a731722218 9674-9676
+npc/scripts_custom.conf
+  s_254918e6ba3c81::t_858309f9c20ef2 57
+npc/custom/hitcount_dealer.txt
+  s_254918e6ba3c81::t_fc663bfb61c1a9 1-26
+src/map/script_constants.hpp
+  s_254918e6ba3c81::t_2c662ea231d61a 782
+src/map/pc.hpp
+  s_254918e6ba3c81::t_629a783e73ed1f 1549
+  s_254918e6ba3c81::t_bb1e4bbaf1a1b8 613
+src/map/skill.hpp
+  s_254918e6ba3c81::t_8d60fe1399b88d 533
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c2f23047952c2832047d10717a96abb8373899b1",
+  "prompts": {},
+  "sessions": {
+    "s_254918e6ba3c81": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f75a0918affeTHf5eO8XaL9DBe",
+        "model": "unknown"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
