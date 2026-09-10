@@ -272224,3 +272224,21 @@ Body:
       bonus bMaxHP,.@r*10;
       bonus2 bSkillAtk,"NW_WILD_FIRE",8+2*(.@r/3);
       bonus bBaseAtk,10*(.@r/2);
+  - Id: 30001
+    AegisName: HitCount_Ring
+    Name: Hit Count Ring
+    Type: Armor
+    Buy: 20
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Both_Accessory: true
+    ArmorLevel: 1
+    EquipLevelMin: 1
+    Script: |
+      bonus2 bSkillHitCount,"MG_FIREBOLT",5;
+      bonus2 bSkillHitCount,"MG_COLDBOLT",5;
+      bonus2 bSkillHitCount,"MG_LIGHTNINGBOLT",5;
+      bonus2 bSkillHitCount,"MG_FIREBALL",5;
+      bonus2 bSkillHitCount,"AC_DOUBLE",5;

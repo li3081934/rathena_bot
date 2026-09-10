@@ -1,0 +1,26 @@
+//===== rAthena Script =======================================
+//= Hit Count Equipment Dealer
+//= Input an item ID and receive that item.
+//= Demo: 30001 = Hit Count Ring (adds +5 hit count to
+//=       Fire/Cold/Lightning Bolt, Fire Ball, Double Strafe)
+//============================================================
+
+prontera,150,185,4	script	HitCount Dealer#hitcount	100,{
+	mes "[Hit Count Dealer]";
+	mes "Input an item ID and I will";
+	mes "give you that item.";
+	mes " ";
+	mes "Try ^0000FF30001^000000 = Hit Count Ring";
+	mes "(+5 hits to Bolt spells, Fire Ball, Double Strafe).";
+	next;
+	input .@itemid;
+	if (.@itemid < 1 || getiteminfo(.@itemid, ITEMINFO_ID) < 1) {
+		mes "[Hit Count Dealer]";
+		mes "Invalid item ID: ^FF0000" + .@itemid + "^000000";
+		close;
+	}
+	getitem .@itemid, 1;
+	mes "[Hit Count Dealer]";
+	mes "Here, take ^0000FF" + getitemname(.@itemid) + "^000000.";
+	close;
+}

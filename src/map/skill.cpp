@@ -181,6 +181,15 @@ int32 skill_get_max( uint16 skill_id )                               { skill_get
 int32 skill_get_range( uint16 skill_id , uint16 skill_lv )           { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->range); }
 int32 skill_get_splash_( uint16 skill_id , uint16 skill_lv )         { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->splash);  }
 int32 skill_get_num( uint16 skill_id ,uint16 skill_lv )              { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->num); }
+int32 skill_get_num2( const block_list* bl, uint16 skill_id, uint16 skill_lv ) {
+	int32 num = skill_get_num(skill_id, skill_lv);
+	map_session_data* sd = BL_CAST(BL_PC, const_cast<block_list*>(bl));
+
+	if (sd != nullptr && num > 0)
+		num += pc_skillhitcount_bonus(sd, skill_id);
+
+	return num;
+}
 int32 skill_get_cast( uint16 skill_id ,uint16 skill_lv )             { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->cast); }
 int32 skill_get_delay( uint16 skill_id ,uint16 skill_lv )            { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->delay); }
 int32 skill_get_walkdelay( uint16 skill_id ,uint16 skill_lv )        { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->walkdelay); }

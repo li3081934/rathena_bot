@@ -5283,7 +5283,7 @@ static struct Damage initialize_weapon_data(const block_list* src, const block_l
 	struct Damage wd;
 
 	wd.type = DMG_NORMAL; //Normal attack
-	wd.div_ = skill_id?skill_get_num(skill_id,skill_lv):1;
+	wd.div_ = skill_id?skill_get_num2(src, skill_id, skill_lv):1;
 	wd.amotion = (skill_id && skill_get_inf(skill_id)&INF_GROUND_SKILL)?0:sstatus->amotion; //Amotion should be 0 for ground skills.
 	// counter attack DOES obey ASPD delay on official, uncomment if you want the old (bad) behavior [helvetica]
 	/*if(skill_id == KN_AUTOCOUNTER)
@@ -5826,7 +5826,7 @@ struct Damage battle_calc_magic_attack(block_list *src,block_list *target,uint16
 	// Initial Values
 	// Set to 1 because magic damage on plants is 1 per hit; if target is not a plant this gets reinitialized to 0 later
 	ad.damage = 1;
-	ad.div_ = skill_get_num(skill_id,skill_lv);
+	ad.div_ = skill_get_num2(src, skill_id, skill_lv);
 	ad.amotion = (skill_get_inf(skill_id)&INF_GROUND_SKILL ? 0 : sstatus->amotion); //Amotion should be 0 for ground skills.
 	ad.dmotion = tstatus->dmotion;
 	ad.blewcount = skill_get_blewcount(skill_id, skill_lv);
@@ -6309,7 +6309,7 @@ struct Damage battle_calc_misc_attack(block_list *src,block_list *target,uint16 
 	//Some initial values
 	md.amotion = (skill_get_inf(skill_id)&INF_GROUND_SKILL ? 0 : sstatus->amotion);
 	md.dmotion = tstatus->dmotion;
-	md.div_ = skill_get_num(skill_id,skill_lv);
+	md.div_ = skill_get_num2(src, skill_id, skill_lv);
 	md.blewcount = skill_get_blewcount(skill_id,skill_lv);
 	md.dmg_lv = ATK_DEF;
 	md.flag = BF_MISC|BF_SKILL;

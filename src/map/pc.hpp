@@ -610,7 +610,7 @@ public:
 	std::vector<s_addeffect> addeff, addeff_atked;
 	std::vector<s_addeffectonskill> addeff_onskill;
 	std::vector<s_item_bonus> skillatk, skillusesprate, skillusesp, skillheal, skillheal2, skillblown, skillcastrate, skillfixcastrate, subskill, skillcooldown, skillfixcast,
-		skillvarcast, skilldelay, itemhealrate, add_def, add_mdef, add_mdmg, reseff, itemgrouphealrate, itemsphealrate, itemgroupsphealrate;
+		skillvarcast, skilldelay, itemhealrate, add_def, add_mdef, add_mdmg, reseff, itemgrouphealrate, itemsphealrate, itemgroupsphealrate, skillhitcount;
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;
@@ -1546,6 +1546,7 @@ void pc_check_available_item(map_session_data *sd, uint8 type);
 int32 pc_useitem(map_session_data*,int32);
 
 int32 pc_skillatk_bonus(map_session_data *sd, uint16 skill_id);
+int32 pc_skillhitcount_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_sub_skillatk_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_skillheal_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_skillheal2_bonus(map_session_data *sd, uint16 skill_id);

@@ -4726,6 +4726,16 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 
 		pc_bonus_itembonus(sd->skillatk, type2, val, false);
 		break;
+	case SP_SKILL_HITCOUNT: // bonus2 bSkillHitCount,sk,n;
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		if (sd->skillhitcount.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus2: SP_SKILL_HITCOUNT: Reached max (%d) number of skills per character, bonus skill %d (+%d) lost.\n", MAX_PC_BONUS, type2, val);
+			break;
+		}
+
+		pc_bonus_itembonus(sd->skillhitcount, type2, val, false);
+		break;
 	case SP_SKILL_HEAL: // bonus2 bSkillHeal,sk,n;
 		if (sd->state.lr_flag == LR_FLAG_ARROW)
 			break;
@@ -9639,6 +9649,24 @@ int32 pc_sub_skillatk_bonus(map_session_data *sd, uint16 skill_id)
 	skill_id = skill_dummy2skill_id(skill_id);
 
 	for (auto &it : sd->subskill) {
+		if (it.id == skill_id) {
+			bonus += it.val;
+			break;
+		}
+	}
+
+	return bonus;
+}
+
+int32 pc_skillhitcount_bonus(map_session_data *sd, uint16 skill_id)
+{
+	int32 bonus = 0;
+
+	nullpo_ret(sd);
+
+	skill_id = skill_dummy2skill_id(skill_id);
+
+	for (auto &it : sd->skillhitcount) {
 		if (it.id == skill_id) {
 			bonus += it.val;
 			break;

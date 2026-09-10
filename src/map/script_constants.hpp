@@ -779,6 +779,7 @@
 	export_constant2("bAddEffWhenHit",SP_ADDEFF_WHENHIT);
 	export_constant2("bAutoSpellWhenHit",SP_AUTOSPELL_WHENHIT);
 	export_constant2("bSkillAtk",SP_SKILL_ATK);
+	export_constant2("bSkillHitCount",SP_SKILL_HITCOUNT);
 	export_constant2("bUnstripable",SP_UNSTRIPABLE);
 	export_constant2("bAutoSpellOnSkill",SP_AUTOSPELL_ONSKILL);
 	export_constant2("bSPGainValue",SP_SP_GAIN_VALUE);
