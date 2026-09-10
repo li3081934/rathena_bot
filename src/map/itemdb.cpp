@@ -5059,8 +5059,28 @@ uint64 ItemIdentifyRandomoptDatabase::parseBodyNode( const ryml::NodeRef& node )
 	return 1;
 }
 
+/// Resolves an identify-mapping Location keyword to an equip bitmask.
+/// Single positions use the EQP_ name directly (case-insensitive via
+/// script constants); these aliases cover combined slots.
+static uint32 identify_location_mask(const std::string& keyword) {
+	if( keyword.compare( "Accessory" ) == 0 ){
+		return EQP_ACC_R | EQP_ACC_L;
+	}
+	if( keyword.compare( "Head" ) == 0 ){
+		return EQP_HEAD_TOP | EQP_HEAD_MID | EQP_HEAD_LOW;
+	}
+	if( keyword.compare( "Shadow_Accessory" ) == 0 ){
+		return EQP_SHADOW_ACC_R | EQP_SHADOW_ACC_L;
+	}
+	int64 constant = 0;
+	std::string name = "EQP_" + keyword;
+	if( script_get_constant( name.c_str(), &constant ) ){
+		return (uint32)constant;
+	}
+	return 0;
+}
+
 uint16 ItemIdentifyRandomoptDatabase::find_group(const std::string& type, uint16 level, uint32 equip) {
-	const bool is_accessory = (equip & (EQP_ACC_R | EQP_ACC_L)) != 0;
 	// Pass 1: rows with Location win over plain Type+Level rows.
 	for( const auto &kv : *this ){
 		const auto &e = kv.second;
@@ -5070,7 +5090,7 @@ uint16 ItemIdentifyRandomoptDatabase::find_group(const std::string& type, uint16
 		if( e->type.compare( type ) != 0 || level < e->level_min || level > e->level_max ){
 			continue;
 		}
-		if( e->location.compare( "Accessory" ) == 0 && is_accessory ){
+		if( ( equip & identify_location_mask( e->location ) ) != 0 ){
 			return e->group_id;
 		}
 	}

@@ -14,9 +14,14 @@
 # - Type                            Item type name (Weapon, Armor, ...).
 #   LevelMin                        Minimum WeaponLevel/ArmorLevel (inclusive).
 #   LevelMax                        Maximum WeaponLevel/ArmorLevel (inclusive).
-#   Location                        Optional: Accessory matches any accessory
-#                                   slot (left/right/both). Rows with Location
-#                                   win over plain Type+Level rows.
+#   Location                        Optional equip-slot keyword. Rows with
+#                                   Location win over plain Type+Level rows.
+#                                   Supported: Head (=Top|Mid|Low), Armor,
+#                                   Left_Hand (=shield), Garment, Shoes,
+#                                   Accessory (=left|right|both),
+#                                   Shadow_Weapon, Shadow_Armor,
+#                                   Shadow_Shield, Shadow_Shoes,
+#                                   Shadow_Accessory (=left|right).
 #   Group                           Random option group from
 #                                   item_randomopt_group.yml (must use the
 #                                   CountChances count model).
@@ -35,8 +40,66 @@ Body:
     LevelMin: 2
     LevelMax: 2
     Group: WEAPON_LV2
+  - Type: Weapon
+    LevelMin: 3
+    LevelMax: 3
+    Group: WEAPON_LV3
+  - Type: Weapon
+    LevelMin: 4
+    LevelMax: 5
+    Group: WEAPON_LV4
   - Type: Armor
     LevelMin: 0
     LevelMax: 99
     Location: Accessory
     Group: ACCESSORY
+  - Type: Armor
+    LevelMin: 0
+    LevelMax: 99
+    Location: Head
+    Group: HEADGEAR
+  - Type: Armor
+    LevelMin: 0
+    LevelMax: 99
+    Location: Armor
+    Group: ARMOR_BODY
+  - Type: Armor
+    LevelMin: 0
+    LevelMax: 99
+    Location: Left_Hand
+    Group: SHIELD
+  - Type: Armor
+    LevelMin: 0
+    LevelMax: 99
+    Location: Garment
+    Group: GARMENT
+  - Type: Armor
+    LevelMin: 0
+    LevelMax: 99
+    Location: Shoes
+    Group: SHOES
+  - Type: Shadow Equipment
+    LevelMin: 0
+    LevelMax: 99
+    Location: Shadow_Weapon
+    Group: SHADOW_ATK
+  - Type: Shadow Equipment
+    LevelMin: 0
+    LevelMax: 99
+    Location: Shadow_Accessory
+    Group: SHADOW_ATK
+  - Type: Shadow Equipment
+    LevelMin: 0
+    LevelMax: 99
+    Location: Shadow_Armor
+    Group: SHADOW_DEF
+  - Type: Shadow Equipment
+    LevelMin: 0
+    LevelMax: 99
+    Location: Shadow_Shield
+    Group: SHADOW_DEF
+  - Type: Shadow Equipment
+    LevelMin: 0
+    LevelMax: 99
+    Location: Shadow_Shoes
+    Group: SHADOW_DEF

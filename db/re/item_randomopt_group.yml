@@ -16392,3 +16392,412 @@ Body:
         MinValue: 1
         MaxValue: 5
         Chance: 5000
+  # ---------------------------------------------------------------------------
+  # Identify-time pools for remaining equipment slots (see
+  # db/re/item_identify_randomopt.yml). Uniform Chance 5000 = equal weight;
+  # delete a line = that stat never rolls. Value ranges scale with tier.
+  # ---------------------------------------------------------------------------
+  - Id: 177
+    Group: WEAPON_LV3
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_STRAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_INTAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_ATKPERCENT
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_MAGICATKPERCENT
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_PLUSASPD
+        MinValue: 1
+        MaxValue: 1
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_ATTPOWER
+        MinValue: 10
+        MaxValue: 25
+        Chance: 5000
+      - Option: VAR_ATTMPOWER
+        MinValue: 10
+        MaxValue: 25
+        Chance: 5000
+      - Option: VAR_HITSUCCESSVALUE
+        MinValue: 5
+        MaxValue: 12
+        Chance: 5000
+      - Option: VAR_CRITICALSUCCESSVALUE
+        MinValue: 3
+        MaxValue: 7
+        Chance: 5000
+  - Id: 178
+    Group: WEAPON_LV4
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_STRAMOUNT
+        MinValue: 1
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 1
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_INTAMOUNT
+        MinValue: 1
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 7
+        Chance: 5000
+      - Option: VAR_ATKPERCENT
+        MinValue: 5
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_MAGICATKPERCENT
+        MinValue: 5
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_PLUSASPD
+        MinValue: 1
+        MaxValue: 1
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 5
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_ATTPOWER
+        MinValue: 15
+        MaxValue: 40
+        Chance: 5000
+      - Option: VAR_ATTMPOWER
+        MinValue: 15
+        MaxValue: 40
+        Chance: 5000
+      - Option: VAR_HITSUCCESSVALUE
+        MinValue: 8
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_CRITICALSUCCESSVALUE
+        MinValue: 5
+        MaxValue: 10
+        Chance: 5000
+      - Option: RANGE_ATTACK_DAMAGE_TARGET
+        MinValue: 2
+        MaxValue: 10
+        Chance: 5000
+      - Option: MELEE_ATTACK_DAMAGE_TARGET
+        MinValue: 2
+        MaxValue: 10
+        Chance: 5000
+  - Id: 179
+    Group: HEADGEAR
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_MAXHPAMOUNT
+        MinValue: 50
+        MaxValue: 200
+        Chance: 5000
+      - Option: VAR_MAXHPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_MAXSPAMOUNT
+        MinValue: 10
+        MaxValue: 50
+        Chance: 5000
+      - Option: VAR_MAXSPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_ITEMDEFPOWER
+        MinValue: 5
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_MDEFPOWER
+        MinValue: 3
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_STRAMOUNT
+        MinValue: 1
+        MaxValue: 2
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 1
+        MaxValue: 2
+        Chance: 5000
+      - Option: VAR_VITAMOUNT
+        MinValue: 1
+        MaxValue: 2
+        Chance: 5000
+      - Option: VAR_INTAMOUNT
+        MinValue: 1
+        MaxValue: 2
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 2
+        Chance: 5000
+      - Option: VAR_LUKAMOUNT
+        MinValue: 1
+        MaxValue: 2
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: DEC_SPELL_CAST_TIME
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+  - Id: 180
+    Group: ARMOR_BODY
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_MAXHPAMOUNT
+        MinValue: 100
+        MaxValue: 300
+        Chance: 5000
+      - Option: VAR_MAXHPPERCENT
+        MinValue: 2
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_MAXSPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_ITEMDEFPOWER
+        MinValue: 10
+        MaxValue: 30
+        Chance: 5000
+      - Option: VAR_MDEFPOWER
+        MinValue: 5
+        MaxValue: 15
+        Chance: 5000
+      - Option: VAR_VITAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_LUKAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: ATTR_TOLERACE_NOTHING
+        MinValue: 2
+        MaxValue: 5
+        Chance: 5000
+  - Id: 181
+    Group: SHIELD
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_MDEFPOWER
+        MinValue: 3
+        MaxValue: 10
+        Chance: 5000
+      - Option: VAR_ITEMDEFPOWER
+        MinValue: 5
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_MAXHPAMOUNT
+        MinValue: 50
+        MaxValue: 150
+        Chance: 5000
+      - Option: VAR_MAXHPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_VITAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: ATTR_TOLERACE_NOTHING
+        MinValue: 2
+        MaxValue: 5
+        Chance: 5000
+      - Option: RACE_TOLERACE_HUMAN
+        MinValue: 2
+        MaxValue: 5
+        Chance: 5000
+  - Id: 182
+    Group: GARMENT
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_AVOIDSUCCESSVALUE
+        MinValue: 5
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_PLUSAVOIDSUCCESSVALUE
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: ATTR_TOLERACE_NOTHING
+        MinValue: 2
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_MAXHPAMOUNT
+        MinValue: 50
+        MaxValue: 200
+        Chance: 5000
+      - Option: VAR_MAXHPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+  - Id: 183
+    Group: SHOES
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_MAXHPAMOUNT
+        MinValue: 50
+        MaxValue: 200
+        Chance: 5000
+      - Option: VAR_MAXHPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_MAXSPAMOUNT
+        MinValue: 10
+        MaxValue: 50
+        Chance: 5000
+      - Option: VAR_MAXSPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: DEC_SPELL_CAST_TIME
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_PLUSASPD
+        MinValue: 1
+        MaxValue: 1
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_AGIAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_HITSUCCESSVALUE
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+  - Id: 184
+    Group: SHADOW_ATK
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_ATTPOWER
+        MinValue: 5
+        MaxValue: 30
+        Chance: 5000
+      - Option: VAR_ATTMPOWER
+        MinValue: 5
+        MaxValue: 30
+        Chance: 5000
+      - Option: VAR_ATKPERCENT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_MAGICATKPERCENT
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_HITSUCCESSVALUE
+        MinValue: 5
+        MaxValue: 15
+        Chance: 5000
+      - Option: VAR_CRITICALSUCCESSVALUE
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_STRAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_INTAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_DEXAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_PLUSASPDPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: RACE_DAMAGE_HUMAN
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+  - Id: 185
+    Group: SHADOW_DEF
+    CountChances: [10, 40, 30, 15, 5]
+    Random:
+      - Option: VAR_MAXHPAMOUNT
+        MinValue: 100
+        MaxValue: 500
+        Chance: 5000
+      - Option: VAR_MAXHPPERCENT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: VAR_MAXSPAMOUNT
+        MinValue: 20
+        MaxValue: 100
+        Chance: 5000
+      - Option: VAR_ITEMDEFPOWER
+        MinValue: 10
+        MaxValue: 40
+        Chance: 5000
+      - Option: VAR_MDEFPOWER
+        MinValue: 5
+        MaxValue: 20
+        Chance: 5000
+      - Option: VAR_VITAMOUNT
+        MinValue: 1
+        MaxValue: 3
+        Chance: 5000
+      - Option: ATTR_TOLERACE_NOTHING
+        MinValue: 2
+        MaxValue: 5
+        Chance: 5000
+      - Option: VAR_AVOIDSUCCESSVALUE
+        MinValue: 5
+        MaxValue: 15
+        Chance: 5000
+      - Option: RACE_TOLERACE_HUMAN
+        MinValue: 1
+        MaxValue: 5
+        Chance: 5000
