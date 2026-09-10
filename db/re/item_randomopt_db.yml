@@ -717,6 +717,14 @@ Body:
     Option: DEC_SP_CONSUMPTION
     Script: |
       bonus bUseSPrate,-(getrandomoptinfo(ROA_VALUE));
+  - Id: 173
+    Option: HP_DRAIN
+    Script: |
+      bonus2 bHPDrainRate,50,getrandomoptinfo(ROA_VALUE);
+  - Id: 174
+    Option: SP_DRAIN
+    Script: |
+      bonus2 bSPDrainRate,20,getrandomoptinfo(ROA_VALUE);
   - Id: 175
     Option: WEAPON_ATTR_NOTHING
     Script: |
