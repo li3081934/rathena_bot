@@ -1,0 +1,16 @@
+db/re/item_randomopt_db.yml
+  h_04504ebe54ce64 720-727
+db/re/item_randomopt_group.yml
+  h_04504ebe54ce64 16280-16287,16340-16347,16468-16475,16536-16543,16604-16611
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e47aa78d2b5d98ca39a4e3e7410cc252cae9bd0a",
+  "prompts": {},
+  "humans": {
+    "h_04504ebe54ce64": {
+      "author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
