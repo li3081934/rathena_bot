@@ -16277,6 +16277,14 @@ Body:
         MinValue: 1
         MaxValue: 3
         Chance: 5000
+      - Option: HP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
+      - Option: SP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
   - Id: 175
     Group: WEAPON_LV2
     CountChances: [10, 40, 30, 15, 5]
@@ -16328,6 +16336,14 @@ Body:
       - Option: VAR_CRITICALSUCCESSVALUE
         MinValue: 3
         MaxValue: 7
+        Chance: 5000
+      - Option: HP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
+      - Option: SP_DRAIN
+        MinValue: 5
+        MaxValue: 5
         Chance: 5000
   # ---------------------------------------------------------------------------
   # Identify-time accessory pool: support-flavored stats, conservative values.
@@ -16449,6 +16465,14 @@ Body:
         MinValue: 3
         MaxValue: 7
         Chance: 5000
+      - Option: HP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
+      - Option: SP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
   - Id: 178
     Group: WEAPON_LV4
     CountChances: [10, 40, 30, 15, 5]
@@ -16509,6 +16533,14 @@ Body:
         MinValue: 2
         MaxValue: 10
         Chance: 5000
+      - Option: HP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
+      - Option: SP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
   - Id: 179
     Group: HEADGEAR
     CountChances: [10, 40, 30, 15, 5]
@@ -16567,6 +16599,14 @@ Body:
         Chance: 5000
       - Option: DEC_SPELL_CAST_TIME
         MinValue: 1
+        MaxValue: 5
+        Chance: 5000
+      - Option: HP_DRAIN
+        MinValue: 5
+        MaxValue: 5
+        Chance: 5000
+      - Option: SP_DRAIN
+        MinValue: 5
         MaxValue: 5
         Chance: 5000
   - Id: 180
