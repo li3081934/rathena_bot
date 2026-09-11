@@ -32,6 +32,7 @@
 #include "cashshop.hpp"
 #include "card_album.hpp"
 #include "channel.hpp"
+#include "teleport.hpp"
 #include "chat.hpp"
 #include "chrif.hpp"
 #include "clan.hpp"

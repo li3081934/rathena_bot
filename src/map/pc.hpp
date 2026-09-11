@@ -94,6 +94,14 @@ enum equip_index {
 	EQI_SHADOW_SHOES,
 	EQI_SHADOW_ACC_R,
 	EQI_SHADOW_ACC_L,
+	EQI_GLYPH_MAJOR_1,
+	EQI_GLYPH_MAJOR_2,
+	EQI_GLYPH_MAJOR_3,
+	EQI_GLYPH_MINOR_1,
+	EQI_GLYPH_MINOR_2,
+	EQI_GLYPH_MINOR_3,
+	EQI_GLYPH_MINOR_4,
+	EQI_GLYPH_MINOR_5,
 	EQI_MAX
 };
 
@@ -301,6 +309,12 @@ struct s_autospell {
 	t_itemid card_id;
 	uint8 flag;
 	bool lock;  // bAutoSpellOnSkill: blocks autospell from triggering again, while being executed
+};
+
+/// Nth normal-attack autospell bonus struct (bAutoSpellEveryNth)
+struct s_nth_autospell {
+	uint16 id, lv;
+	int16 need, counter;
 };
 
 /// AddEff and AddEff2 bonus struct
@@ -607,10 +621,12 @@ public:
 	// zeroed arrays end here.
 
 	std::vector<s_autospell> autospell, autospell2, autospell3;
+	std::vector<s_nth_autospell> nthautospell;
+	t_tick nth_autospell_tick;	///< Tick of the last normal attack (for the 2s idle counter reset)
 	std::vector<s_addeffect> addeff, addeff_atked;
 	std::vector<s_addeffectonskill> addeff_onskill;
 	std::vector<s_item_bonus> skillatk, skillusesprate, skillusesp, skillheal, skillheal2, skillblown, skillcastrate, skillfixcastrate, subskill, skillcooldown, skillfixcast,
-		skillvarcast, skilldelay, itemhealrate, add_def, add_mdef, add_mdmg, reseff, itemgrouphealrate, itemsphealrate, itemgroupsphealrate;
+		skillvarcast, skilldelay, itemhealrate, add_def, add_mdef, add_mdmg, reseff, itemgrouphealrate, itemsphealrate, itemgroupsphealrate, skillhitcount;
 	std::vector<s_add_drop> add_drop;
 	std::vector<s_addele2> subele2;
 	std::vector<s_vanish_bonus> sp_vanish, hp_vanish;
@@ -1546,6 +1562,7 @@ void pc_check_available_item(map_session_data *sd, uint8 type);
 int32 pc_useitem(map_session_data*,int32);
 
 int32 pc_skillatk_bonus(map_session_data *sd, uint16 skill_id);
+int32 pc_skillhitcount_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_sub_skillatk_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_skillheal_bonus(map_session_data *sd, uint16 skill_id);
 int32 pc_skillheal2_bonus(map_session_data *sd, uint16 skill_id);

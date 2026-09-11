@@ -2056,4 +2056,7 @@ parseable_packet( HEADER_CZ_CARD_ALBUM_DEACTIVATE, 6, clif_parse_card_album_deac
 parseable_packet( HEADER_CZ_REQ_MAPMOBS, 2, clif_parse_req_mapmobs, 0 );
 parseable_packet( HEADER_CZ_REQ_MOBDROPS, 4, clif_parse_req_mobdrops, 2 );
 
+// Convenience teleport (custom packet, 0x0C49 is unused officially)
+parseable_packet( HEADER_CZ_REQ_TELEPORT, 22, clif_parse_req_teleport, 2 );
+
 #endif /* CLIF_PACKETDB_HPP */

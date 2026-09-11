@@ -711,7 +711,15 @@ uint32 equip_bitmask[EQI_MAX] = {
 	EQP_SHADOW_SHIELD,		// EQI_SHADOW_SHIELD
 	EQP_SHADOW_SHOES,		// EQI_SHADOW_SHOES
 	EQP_SHADOW_ACC_R,		// EQI_SHADOW_ACC_R
-	EQP_SHADOW_ACC_L		// EQI_SHADOW_ACC_L
+	EQP_SHADOW_ACC_L,		// EQI_SHADOW_ACC_L
+	EQP_GLYPH_MAJOR_1,		// EQI_GLYPH_MAJOR_1
+	EQP_GLYPH_MAJOR_2,		// EQI_GLYPH_MAJOR_2
+	EQP_GLYPH_MAJOR_3,		// EQI_GLYPH_MAJOR_3
+	EQP_GLYPH_MINOR_1,		// EQI_GLYPH_MINOR_1
+	EQP_GLYPH_MINOR_2,		// EQI_GLYPH_MINOR_2
+	EQP_GLYPH_MINOR_3,		// EQI_GLYPH_MINOR_3
+	EQP_GLYPH_MINOR_4,		// EQI_GLYPH_MINOR_4
+	EQP_GLYPH_MINOR_5		// EQI_GLYPH_MINOR_5
 };
 
 //Links related info to the sd->hate_mob[]/sd->feel_map[] entries
@@ -4726,6 +4734,16 @@ void pc_bonus2(map_session_data *sd,int32 type,int32 type2,int32 val)
 
 		pc_bonus_itembonus(sd->skillatk, type2, val, false);
 		break;
+	case SP_SKILL_HITCOUNT: // bonus2 bSkillHitCount,sk,n;
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		if (sd->skillhitcount.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus2: SP_SKILL_HITCOUNT: Reached max (%d) number of skills per character, bonus skill %d (+%d) lost.\n", MAX_PC_BONUS, type2, val);
+			break;
+		}
+
+		pc_bonus_itembonus(sd->skillhitcount, type2, val, false);
+		break;
 	case SP_SKILL_HEAL: // bonus2 bSkillHeal,sk,n;
 		if (sd->state.lr_flag == LR_FLAG_ARROW)
 			break;
@@ -5184,6 +5202,22 @@ void pc_bonus3(map_session_data *sd,int32 type,int32 type2,int32 type3,int32 val
 			int32 target = skill_get_inf(type2); //Support or Self (non-auto-target) skills should pick self.
 			target = target&INF_SUPPORT_SKILL || (target&INF_SELF_SKILL && !skill_get_inf2(type2, INF2_NOTARGETSELF));
 			pc_bonus_autospell(sd->autospell, type2, type3, val, 0, current_equip_card_id, target ? AUTOSPELL_FORCE_SELF : AUTOSPELL_FORCE_TARGET);
+		}
+		break;
+	case SP_AUTOSPELL_EVERYNTH: // bonus3 bAutoSpellEveryNth,sk,n,lv;
+		if (sd->state.lr_flag == LR_FLAG_ARROW)
+			break;
+		if (sd->nthautospell.size() == MAX_PC_BONUS) {
+			ShowWarning("pc_bonus3: SP_AUTOSPELL_EVERYNTH: Reached max (%d) number of nth-autospells per character, bonus skill %d lost.\n", MAX_PC_BONUS, type2);
+			break;
+		}
+		{
+			struct s_nth_autospell entry = {};
+			entry.id = (uint16)type2;
+			entry.lv = (uint16)val;
+			entry.need = (int16)type3;
+			entry.counter = 0;
+			sd->nthautospell.push_back(entry);
 		}
 		break;
 	case SP_AUTOSPELL_WHENHIT: // bonus3 bAutoSpellWhenHit,sk,y,n;
@@ -9648,6 +9682,24 @@ int32 pc_sub_skillatk_bonus(map_session_data *sd, uint16 skill_id)
 	return bonus;
 }
 
+int32 pc_skillhitcount_bonus(map_session_data *sd, uint16 skill_id)
+{
+	int32 bonus = 0;
+
+	nullpo_ret(sd);
+
+	skill_id = skill_dummy2skill_id(skill_id);
+
+	for (auto &it : sd->skillhitcount) {
+		if (it.id == skill_id) {
+			bonus += it.val;
+			break;
+		}
+	}
+
+	return bonus;
+}
+
 int32 pc_skillheal_bonus(map_session_data *sd, uint16 skill_id) {
 	int32 bonus = sd->bonus.add_heal_rate;
 
@@ -12165,6 +12217,48 @@ bool pc_equipitem(map_session_data *sd,int16 n,int32 req_pos,bool equipswitch)
 		pos = (req_pos&EQP_SHADOW_ARMS);
 		if( pos == EQP_SHADOW_ARMS )
 			pos = (equip_index[EQI_SHADOW_WEAPON] >= 0 ? EQP_SHADOW_SHIELD : EQP_SHADOW_WEAPON);
+	} else if(pos == EQP_GLYPH_MAJOR || pos == EQP_GLYPH_MINOR) {
+		// A glyph with the same item id cannot be equipped twice.
+		for (i = 0; i < EQI_MAX; i++) {
+			if (!(equip_bitmask[i] & (EQP_GLYPH_MAJOR | EQP_GLYPH_MINOR)))
+				continue;
+			int32 eq_idx = sd->equip_index[i];
+			if (eq_idx >= 0 && sd->inventory_data[eq_idx] && sd->inventory_data[eq_idx]->nameid == id->nameid) {
+				if( equipswitch ){
+					clif_equipswitch_add( sd, n, req_pos, ITEM_EQUIP_ACK_FAIL );
+				}else{
+					clif_equipitemack( *sd, ITEM_EQUIP_ACK_FAIL, n );
+				}
+				return false;
+			}
+		}
+
+		// Glyph slots are a shared pool: pick the first free slot within the requested pool.
+		int32 glyph_pool = pos;
+		pos = req_pos & glyph_pool;
+		if (pos == 0)
+			pos = glyph_pool;
+
+		int32 glyph_picked = 0;
+		for (i = 0; i < EQI_MAX; i++) {
+			if (!(pos & equip_bitmask[i]))
+				continue;
+			if (equip_index[i] < 0) {
+				glyph_picked = equip_bitmask[i];
+				break;
+			}
+		}
+
+		if (glyph_picked == 0) { // No free glyph slot
+			if( equipswitch ){
+				clif_equipswitch_add( sd, n, req_pos, ITEM_EQUIP_ACK_FAIL );
+			}else{
+				clif_equipitemack( *sd, ITEM_EQUIP_ACK_FAIL, n );
+			}
+			return false;
+		}
+
+		pos = glyph_picked;
 	}
 
 	if (pos&EQP_HAND_R && battle_config.use_weapon_skill_range&BL_PC) {

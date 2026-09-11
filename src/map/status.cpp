@@ -3848,6 +3848,8 @@ int32 status_calc_pc_sub(map_session_data* sd, uint8 opt)
 	sd->addeff_atked.clear();
 	sd->addeff_onskill.clear();
 	sd->skillatk.clear();
+	sd->skillhitcount.clear();
+	sd->nthautospell.clear();
 	sd->skillusesprate.clear();
 	sd->skillusesp.clear();
 	sd->skillheal.clear();
