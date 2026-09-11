@@ -1,0 +1,51 @@
+src/map/script_constants.hpp
+  s_254918e6ba3c81::t_067f48fb6a019a 916-923
+  s_254918e6ba3c81::t_1ac130a43c4fe3 783
+npc/custom/hitcount_dealer.txt
+  s_254918e6ba3c81::t_39fef3ea1a0367 2,4-5,8-9,13-14,18,23
+src/map/map.hpp
+  s_254918e6ba3c81::t_41ec6323d19340 592-593
+src/map/pc.hpp
+  s_254918e6ba3c81::t_82ce5b0c18c80c 625
+  s_254918e6ba3c81::t_9f25039e147d71 624
+  s_254918e6ba3c81::t_1390d4fbee05a4 314-319
+  s_254918e6ba3c81::t_04c07ec34679a5 97-104
+src/map/pc.cpp
+  s_254918e6ba3c81::t_3da3f78263de84 12220,12236-12261
+  s_254918e6ba3c81::t_34331af243625a 12221-12235
+  s_254918e6ba3c81::t_eeac625b5d2e6a 714-722
+  s_254918e6ba3c81::t_a7e285196a7638 5207-5222
+src/common/mmo.hpp
+  s_254918e6ba3c81::t_9444b621a6dc93 359-366,371-372
+src/map/script.cpp
+  s_254918e6ba3c81::t_433c399d719402 10050
+src/map/status.cpp
+  s_254918e6ba3c81::t_85934cf952ecb1 3852
+src/map/battle.cpp
+  s_254918e6ba3c81::t_be4bedaddcc8e1 7822-7825
+  s_254918e6ba3c81::t_8a0efa3d4a9c65 7130-7165,7168-7188
+  s_254918e6ba3c81::t_80b601dda90fdc 7166-7167
+npc/custom/glyph_shop.txt
+  s_254918e6ba3c81::t_d4821e98010b48 1-5
+  s_254918e6ba3c81::t_64917c1a36fc24 6
+npc/scripts_custom.conf
+  s_254918e6ba3c81::t_c6479f1705bc18 58
+src/map/skill.cpp
+  s_254918e6ba3c81::t_2739f665a7014b 1633-1634
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "298ecb1429bb5e4f461e33e6a9178f3ac3ab3aa3",
+  "prompts": {},
+  "sessions": {
+    "s_254918e6ba3c81": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f75a0918affeTHf5eO8XaL9DBe",
+        "model": "unknown"
+      },
+      "human_author": "lijs8 <lijs8@lenovo.com>"
+    }
+  }
+}
