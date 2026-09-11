@@ -7127,6 +7127,65 @@ void battle_autocast_elembuff_skill(map_session_data* sd, block_list* target, ui
 	sd->state.autocast = 0;
 }
 
+/**
+ * Deterministic "cast a skill every Nth normal attack" proc (bonus: bAutoSpellEveryNth).
+ * Counts every swing (including misses). Counters reset after 2s without a normal attack.
+ * Casts inline after the normal attack (like SC_AUTOSHADOWSPELL) and applies the skill
+ * after-cast delay so the attack/proc/next-attack sequence stays smooth.
+ * No SP/ammo/condition checks are performed (free trigger).
+ * @param sd: Attacker
+ * @param target: Attack target
+ * @param tick: Current tick
+ * @param flag: Special skill flags
+ */
+static void battle_nth_autospell(map_session_data* sd, block_list* target, t_tick tick, int32 flag)
+{
+	if (sd == nullptr || target == nullptr || sd->nthautospell.empty())
+		return;
+
+	// Reset the counters if there was no normal attack for more than 2 seconds.
+	if (sd->nth_autospell_tick != 0 && DIFF_TICK(tick, sd->nth_autospell_tick) > 2000) {
+		for (auto &it : sd->nthautospell)
+			it.counter = 0;
+	}
+	sd->nth_autospell_tick = tick;
+
+	for (auto &it : sd->nthautospell) {
+		if (it.id == 0 || it.need <= 0)
+			continue;
+
+		if (++it.counter < it.need)
+			continue;
+
+		it.counter = 0; // cycle every N swings
+
+		if (status_isdead(*target))
+			continue;
+
+		uint16 skill_id = it.id;
+		// lv 0 = use the player's learned skill level (minimum 1).
+		uint16 skill_lv = it.lv ? it.lv : static_cast<uint16>(max(1, pc_checkskill(sd, skill_id)));
+		e_cast_type type = skill_get_casttype(skill_id);
+
+		sd->state.autocast = 1;
+		switch (type) {
+			case CAST_GROUND:
+				skill_castend_pos2(sd, target->x, target->y, skill_id, skill_lv, tick, flag);
+				break;
+			case CAST_NODAMAGE:
+				skill_castend_nodamage_id(sd, target, skill_id, skill_lv, tick, flag);
+				break;
+			case CAST_DAMAGE:
+			default:
+				skill_castend_damage_id(sd, target, skill_id, skill_lv, tick, flag);
+				break;
+		}
+		sd->state.autocast = 0;
+
+		battle_autocast_aftercast(sd, skill_id, skill_lv, tick);
+	}
+}
+
 /*==========================================
  * Do a basic physical attack (call through unit_attack_timer)
  *------------------------------------------*/
@@ -7760,6 +7819,10 @@ enum damage_lv battle_weapon_attack(block_list* src, block_list* target, t_tick 
 			else
 				battle_drain(sd, target, wd.damage, wd.damage2, tstatus->race, tstatus->class_);
 		}
+
+		// bAutoSpellEveryNth: deterministic proc on normal attacks (after the swing is resolved)
+		if (wd.flag & BF_WEAPON)
+			battle_nth_autospell(sd, target, tick, flag);
 	}
 
 	if (sd && tsc && wd.flag&BF_LONG && tsc->getSCE(SC_WINDSIGN) && rand()%100 < tsc->getSCE(SC_WINDSIGN)->val2)

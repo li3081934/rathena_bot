@@ -272225,16 +272225,20 @@ Body:
       bonus2 bSkillAtk,"NW_WILD_FIRE",8+2*(.@r/3);
       bonus bBaseAtk,10*(.@r/2);
   - Id: 30001
-    AegisName: HitCount_Ring
-    Name: Hit Count Ring
+    AegisName: Glyph_Major_Multistrike
+    Name: Major Glyph: Multistrike
     Type: Armor
-    Buy: 20
+    Buy: 1
     Weight: 100
     Jobs:
       All: true
     Locations:
-      Both_Accessory: true
+      Glyph_Major_1: true
+      Glyph_Major_2: true
+      Glyph_Major_3: true
+    Defense: 0
     ArmorLevel: 1
+    Refineable: false
     EquipLevelMin: 1
     Script: |
       bonus2 bSkillHitCount,"MG_FIREBOLT",5;
@@ -272242,3 +272246,475 @@ Body:
       bonus2 bSkillHitCount,"MG_LIGHTNINGBOLT",5;
       bonus2 bSkillHitCount,"MG_FIREBALL",5;
       bonus2 bSkillHitCount,"AC_DOUBLE",5;
+  - Id: 30002
+    AegisName: Glyph_Minor_EchoBolt
+    Name: Minor Glyph: Echo Bolt
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus3 bAutoSpellEveryNth,"MG_FIREBOLT",3,10;
+  - Id: 30003
+    AegisName: Glyph_Minor_Dexterity
+    Name: Minor Glyph: Dexterity
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bDex, readparam(bDex)*10/100;
+  - Id: 30004
+    AegisName: Glyph_Minor_Haste
+    Name: Minor Glyph: Haste
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bAspd,2;
+  - Id: 30005
+    AegisName: Glyph_Minor_Agility
+    Name: Minor Glyph: Agility
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bAgi, readparam(bAgi)*10/100;
+  - Id: 30006
+    AegisName: Glyph_Minor_Bloodletting
+    Name: Minor Glyph: Bloodletting
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus2 bHPDrainRate,50,5;
+  - Id: 30007
+    AegisName: Glyph_Minor_SoulSiphon
+    Name: Minor Glyph: Soul Siphon
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus2 bSPDrainRate,50,5;
+  - Id: 30008
+    AegisName: Glyph_Major_TwinShot
+    Name: Major Glyph: Twin Shot
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Major_1: true
+      Glyph_Major_2: true
+      Glyph_Major_3: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus3 bAutoSpellEveryNth,"AC_DOUBLE",3,0;
+  - Id: 30009
+    AegisName: Glyph_Major_TwinStar
+    Name: Major Glyph: Twin Star
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Major_1: true
+      Glyph_Major_2: true
+      Glyph_Major_3: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus2 bSkillHitCount,"AC_DOUBLE",1;
+  - Id: 30010
+    AegisName: Glyph_Major_Cloudpiercer
+    Name: Major Glyph: Cloudpiercer
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Major_1: true
+      Glyph_Major_2: true
+      Glyph_Major_3: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus2 bSkillAtk,"AC_DOUBLE",50;
+  - Id: 30011
+    AegisName: Glyph_Minor_Str
+    Name: Minor Glyph: Strength
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bStr,10;
+  - Id: 30012
+    AegisName: Glyph_Minor_Agi
+    Name: Minor Glyph: Agility
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bAgi,10;
+  - Id: 30013
+    AegisName: Glyph_Minor_Vit
+    Name: Minor Glyph: Vitality
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bVit,10;
+  - Id: 30014
+    AegisName: Glyph_Minor_Int
+    Name: Minor Glyph: Intelligence
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bInt,10;
+  - Id: 30015
+    AegisName: Glyph_Minor_Dex
+    Name: Minor Glyph: Precision
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bDex,10;
+  - Id: 30016
+    AegisName: Glyph_Minor_Luk
+    Name: Minor Glyph: Luck
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bLuk,10;
+  - Id: 30017
+    AegisName: Glyph_Minor_Hp
+    Name: Minor Glyph: Life
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bMaxHP,500;
+  - Id: 30018
+    AegisName: Glyph_Minor_Sp
+    Name: Minor Glyph: Mana
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bMaxSP,100;
+  - Id: 30019
+    AegisName: Glyph_Minor_HpPct
+    Name: Minor Glyph: Life Surge
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bMaxHPrate,10;
+  - Id: 30020
+    AegisName: Glyph_Minor_SpPct
+    Name: Minor Glyph: Mana Surge
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bMaxSPrate,10;
+  - Id: 30021
+    AegisName: Glyph_Minor_Atk
+    Name: Minor Glyph: Attack
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bBaseAtk,20;
+  - Id: 30022
+    AegisName: Glyph_Minor_Matk
+    Name: Minor Glyph: Magic Attack
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bMatk,20;
+  - Id: 30023
+    AegisName: Glyph_Minor_AtkPct
+    Name: Minor Glyph: Attack Surge
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bAtkRate,5;
+  - Id: 30024
+    AegisName: Glyph_Minor_MatkPct
+    Name: Minor Glyph: Magic Attack Surge
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Minor_1: true
+      Glyph_Minor_2: true
+      Glyph_Minor_3: true
+      Glyph_Minor_4: true
+      Glyph_Minor_5: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus bMatkRate,5;
+  - Id: 30025
+    AegisName: Glyph_Major_SnowstormVolley
+    Name: Major Glyph: Snowstorm Volley
+    Type: Armor
+    Buy: 1
+    Weight: 100
+    Jobs:
+      All: true
+    Locations:
+      Glyph_Major_1: true
+      Glyph_Major_2: true
+      Glyph_Major_3: true
+    Defense: 0
+    ArmorLevel: 1
+    Refineable: false
+    EquipLevelMin: 1
+    Script: |
+      bonus4 bAutoSpellOnSkill,"AC_DOUBLE","WZ_STORMGUST",0,1000;

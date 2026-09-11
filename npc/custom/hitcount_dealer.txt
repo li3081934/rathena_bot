@@ -1,26 +1,26 @@
 //===== rAthena Script =======================================
-//= Hit Count Equipment Dealer
+//= Glyph Dealer (test)
 //= Input an item ID and receive that item.
-//= Demo: 30001 = Hit Count Ring (adds +5 hit count to
-//=       Fire/Cold/Lightning Bolt, Fire Ball, Double Strafe)
+//= Demo: 30001 = Major Glyph: Multistrike (hit count +5)
+//=       30002 = Minor Glyph: Echo Bolt (every 3rd attack)
 //============================================================
 
-prontera,150,185,4	script	HitCount Dealer#hitcount	100,{
-	mes "[Hit Count Dealer]";
+prontera,150,185,4	script	Glyph Dealer#glyph	100,{
+	mes "[Glyph Dealer]";
 	mes "Input an item ID and I will";
 	mes "give you that item.";
 	mes " ";
-	mes "Try ^0000FF30001^000000 = Hit Count Ring";
-	mes "(+5 hits to Bolt spells, Fire Ball, Double Strafe).";
+	mes "Try ^0000FF30001^000000 = Major Glyph (Multistrike)";
+	mes "Or  ^0000FF30002^000000 = Minor Glyph (Echo Bolt).";
 	next;
 	input .@itemid;
 	if (.@itemid < 1 || getiteminfo(.@itemid, ITEMINFO_ID) < 1) {
-		mes "[Hit Count Dealer]";
+		mes "[Glyph Dealer]";
 		mes "Invalid item ID: ^FF0000" + .@itemid + "^000000";
 		close;
 	}
 	getitem .@itemid, 1;
-	mes "[Hit Count Dealer]";
+	mes "[Glyph Dealer]";
 	mes "Here, take ^0000FF" + getitemname(.@itemid) + "^000000.";
 	close;
 }

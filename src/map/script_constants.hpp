@@ -780,6 +780,7 @@
 	export_constant2("bAutoSpellWhenHit",SP_AUTOSPELL_WHENHIT);
 	export_constant2("bSkillAtk",SP_SKILL_ATK);
 	export_constant2("bSkillHitCount",SP_SKILL_HITCOUNT);
+	export_constant2("bAutoSpellEveryNth",SP_AUTOSPELL_EVERYNTH);
 	export_constant2("bUnstripable",SP_UNSTRIPABLE);
 	export_constant2("bAutoSpellOnSkill",SP_AUTOSPELL_ONSKILL);
 	export_constant2("bSPGainValue",SP_SP_GAIN_VALUE);
@@ -912,6 +913,14 @@
 	export_constant(EQP_SHADOW_SHOES);
 	export_constant(EQP_SHADOW_ACC_R);
 	export_constant(EQP_SHADOW_ACC_L);
+	export_constant(EQP_GLYPH_MAJOR_1);
+	export_constant(EQP_GLYPH_MAJOR_2);
+	export_constant(EQP_GLYPH_MAJOR_3);
+	export_constant(EQP_GLYPH_MINOR_1);
+	export_constant(EQP_GLYPH_MINOR_2);
+	export_constant(EQP_GLYPH_MINOR_3);
+	export_constant(EQP_GLYPH_MINOR_4);
+	export_constant(EQP_GLYPH_MINOR_5);
 	export_constant(EQP_ACC_RL);
 	export_constant(EQP_SHADOW_ACC_RL);
 

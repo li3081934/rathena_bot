@@ -1630,7 +1630,8 @@ int32 skill_onskillusage(map_session_data *sd, block_list *bl, uint16 skill_id, 
 		if( rnd()%1000 >= it.rate )
 			continue;
 
-		uint16 skill_lv = it.lv ? it.lv : 1;
+		// 0 = use the player's learned skill level (minimum 1).
+		uint16 skill_lv = it.lv ? it.lv : static_cast<uint16>(max(1, pc_checkskill(sd, skill)));
 
 		if (it.flag & AUTOSPELL_FORCE_RANDOM_LEVEL)
 			skill_lv = rnd_value<uint16>( 1, skill_lv ); //random skill_lv

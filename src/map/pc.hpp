@@ -94,6 +94,14 @@ enum equip_index {
 	EQI_SHADOW_SHOES,
 	EQI_SHADOW_ACC_R,
 	EQI_SHADOW_ACC_L,
+	EQI_GLYPH_MAJOR_1,
+	EQI_GLYPH_MAJOR_2,
+	EQI_GLYPH_MAJOR_3,
+	EQI_GLYPH_MINOR_1,
+	EQI_GLYPH_MINOR_2,
+	EQI_GLYPH_MINOR_3,
+	EQI_GLYPH_MINOR_4,
+	EQI_GLYPH_MINOR_5,
 	EQI_MAX
 };
 
@@ -301,6 +309,12 @@ struct s_autospell {
 	t_itemid card_id;
 	uint8 flag;
 	bool lock;  // bAutoSpellOnSkill: blocks autospell from triggering again, while being executed
+};
+
+/// Nth normal-attack autospell bonus struct (bAutoSpellEveryNth)
+struct s_nth_autospell {
+	uint16 id, lv;
+	int16 need, counter;
 };
 
 /// AddEff and AddEff2 bonus struct
@@ -607,6 +621,8 @@ public:
 	// zeroed arrays end here.
 
 	std::vector<s_autospell> autospell, autospell2, autospell3;
+	std::vector<s_nth_autospell> nthautospell;
+	t_tick nth_autospell_tick;	///< Tick of the last normal attack (for the 2s idle counter reset)
 	std::vector<s_addeffect> addeff, addeff_atked;
 	std::vector<s_addeffectonskill> addeff_onskill;
 	std::vector<s_item_bonus> skillatk, skillusesprate, skillusesp, skillheal, skillheal2, skillblown, skillcastrate, skillfixcastrate, subskill, skillcooldown, skillfixcast,
